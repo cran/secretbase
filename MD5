@@ -1,0 +1,14 @@
+5e272ca7d5795c9d122165a0d8746ab4 *DESCRIPTION
+fd87191fd153cecb5d856e8de81ba245 *NAMESPACE
+3ac7daf8c11e211ac3134f9f174fa893 *NEWS.md
+a104fa525d9729bd1f1c019b98804979 *R/base.R
+e41ee97b868b87428023ca8f336a3cf2 *README.md
+8faf250d78a120ba4c7ea2186efddd24 *build/partial.rdb
+3dce5a6e4505b4ca1606b32605b06a39 *inst/CITATION
+151d3084bac05614354ecb0940c81e82 *man/secretbase-package.Rd
+6a900e7ca5bc9f3d95ade6763f68c9e7 *man/sha3.Rd
+d25d5af44b59cd40d3830b54f7a7cf7f *src/Makevars
+b35111c80af6e06e7ebd3175fb17675a *src/init.c
+3bbab9b149a29b8875b66eaae9617ac5 *src/secret.c
+685554547c10ac98870e8dedbb40ae98 *src/secret.h
+81b29f1fc6790c091ff21a4e400e3197 *tests/tests.R
