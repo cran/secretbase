@@ -1,3 +1,7 @@
+# secretbase 0.2.0
+
+* Adds file hashing interface.
+
 # secretbase 0.1.0
 
 * Initial CRAN release.

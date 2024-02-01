@@ -36,45 +36,33 @@
 #'
 #' @useDynLib secretbase, .registration = TRUE
 #'
-#' @docType package
-#'
 "_PACKAGE"
 
 # secretbase - Main Functions --------------------------------------------------
 
 #' Cryptographic Hashing Using the SHA-3 Algorithm
 #'
-#' Returns a SHA-3 hash of the supplied R object. Implementated from code used
-#'     by the the 'Mbed TLS' library under the Trusted Firmware Project.
+#' Returns a SHA-3 hash of the supplied R object or file.
 #'
-#' @param x an object.
-#' @param bits [default 256L] output size of the returned hash - uses the
-#'     relevant SHA-3 hash function if one of 224, 256, 384 or 512, or
-#'     else the SHAKE256 extendable-output function (XOF) for arbitrary values.
-#'     The supplied value must be between 8 and 2^24, and is automatically
-#'     coerced to integer.
+#' @param x R object to hash. A character string or raw vector (without
+#'     attributes) is hashed 'as is'. All other objects are hashed using R
+#'     serialization in a memory-efficient 'streaming' manner, without
+#'     allocation of the serialized object. To ensure portability, serialization
+#'     v3 XDR is always used with headers skipped (as these contain R version
+#'     and encoding information).
+#' @param bits [default 256L] output size of the returned hash. If one of 224,
+#'     256, 384 or 512, uses the relevant SHA-3 cryptographic hash function. For
+#'     all other values, uses the SHAKE256 extendable-output function (XOF).
+#'     Must be between 8 and 2^24 and coercible to integer.
 #' @param convert [default TRUE] if TRUE, the hash is converted to its hex
 #'     representation as a character string, if FALSE, output directly as a raw
 #'     vector, or if NA, a vector of (32-bit) integer values.
 #'
 #' @return A character string, raw or integer vector depending on 'convert'.
 #'
-#' @details For argument 'x', a character string or raw vector (with no
-#'     attributes) is hashed 'as is'.
-#'     
-#'     All other objects are hashed in-place, in a 'streaming' fashion, by R
-#'     serialization but without allocation of the serialized object. To ensure
-#'     portability, R serialization version 3, big-endian representation is
-#'     always used, skipping the headers (as these contain the R version number
-#'     and native encoding information).
-#'
-#'     The result of hashing is always a byte sequence, which is converted to a
-#'     character string hex representation if 'convert' is TRUE, or returned as
-#'     a raw vector if 'convert' is FALSE.
-#'     
-#'     To hash to integer values, set convert to NA. For a single integer value
-#'     set 'bits' to 32. These values may be supplied as random seeds for R's
-#'     pseudo random number generators (RNGs).
+#' @details To produce single integer values suitable for use as random seeds
+#'     for R's pseudo random number generators (RNGs), set 'bits' to 32 and
+#'     'convert' to NA.
 #'
 #' @examples
 #' # SHA3-256 hash as character string:
@@ -97,4 +85,20 @@
 #'
 #' @export
 #'
-sha3 <- function(x, bits = 256L, convert = TRUE) .Call(secretbase_sha3, x, bits, convert)
+sha3 <- function(x, bits = 256L, convert = TRUE)
+  .Call(secretbase_sha3, x, bits, convert)
+
+#' @param file character file name / path. The file is hashed in a streaming
+#'     fashion and does not need to fit in memory.
+#' 
+#' @examples
+#' # SHA3-256 hash a file:
+#' file <- tempfile(); cat("secret base", file = file)
+#' sha3file(file)
+#' unlink(file)
+#'     
+#' @rdname sha3
+#' @export
+#'
+sha3file <- function(file, bits = 256L, convert = TRUE)
+  .Call(secretbase_sha3_file, file, bits, convert)

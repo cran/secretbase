@@ -28,15 +28,14 @@
 
 #define SB_R_SERIAL_VER 3
 #define SB_SERIAL_HEADERS 6
+#define SB_BUF_SIZE 4096
 
 typedef enum {
-  MBEDTLS_SHA3_NONE = 0,
+  MBEDTLS_SHA3_SHAKE256 = 0,
   MBEDTLS_SHA3_224,
   MBEDTLS_SHA3_256,
   MBEDTLS_SHA3_384,
-  MBEDTLS_SHA3_512,
-  MBEDTLS_SHA3_SHAKE128,
-  MBEDTLS_SHA3_SHAKE256,
+  MBEDTLS_SHA3_512
 } mbedtls_sha3_id;
 
 typedef struct mbedtls_sha3_family_functions {
@@ -50,18 +49,18 @@ typedef struct mbedtls_sha3_context {
   uint64_t state[25];
   uint8_t index;
   uint8_t id;
-  
   uint16_t r;
   uint16_t olen;
   uint8_t xor_byte;
   uint16_t max_block_size;
 } mbedtls_sha3_context;
 
-typedef struct secretbase_context_s {
-  mbedtls_sha3_context *ctx;
+typedef struct secretbase_context {
   int skip;
+  mbedtls_sha3_context *ctx;
 } secretbase_context;
 
 SEXP secretbase_sha3(SEXP, SEXP, SEXP);
+SEXP secretbase_sha3_file(SEXP, SEXP, SEXP);
 
 #endif

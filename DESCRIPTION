@@ -1,7 +1,7 @@
 Package: secretbase
 Type: Package
 Title: Cryptographic Hash and Extendable-Output Functions
-Version: 0.1.0
+Version: 0.2.0
 Description: SHA-3 cryptographic hash and SHAKE256 extendable-output functions
     (XOF). The SHA-3 Secure Hash Standard was published by the National
     Institute of Standards and Technology (NIST) in 2015 at
@@ -22,11 +22,11 @@ URL: https://shikokuchuo.net/secretbase/,
         https://github.com/shikokuchuo/secretbase/
 Encoding: UTF-8
 Depends: R (>= 3.5)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 NeedsCompilation: yes
-Packaged: 2024-01-22 08:17:56 UTC; cg334
+Packaged: 2024-02-01 09:26:19 UTC; cg334
 Author: Charlie Gao [aut, cre] (<https://orcid.org/0000-0002-0750-061X>),
   Hibiki AI Limited [cph]
 Maintainer: Charlie Gao <charlie.gao@shikokuchuo.net>
 Repository: CRAN
-Date/Publication: 2024-01-22 20:00:03 UTC
+Date/Publication: 2024-02-01 09:40:02 UTC

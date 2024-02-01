@@ -11,6 +11,7 @@ status](https://www.r-pkg.org/badges/version/secretbase?color=42147b)](https://C
 badge](https://shikokuchuo.r-universe.dev/badges/secretbase?color=e4723a)](https://shikokuchuo.r-universe.dev/secretbase)
 [![R-CMD-check](https://github.com/shikokuchuo/secretbase/workflows/R-CMD-check/badge.svg)](https://github.com/shikokuchuo/secretbase/actions)
 [![codecov](https://codecov.io/gh/shikokuchuo/secretbase/graph/badge.svg)](https://app.codecov.io/gh/shikokuchuo/secretbase)
+[![DOI](https://zenodo.org/badge/745691432.svg)](https://zenodo.org/doi/10.5281/zenodo.10553139)
 <!-- badges: end -->
 
 SHA-3 cryptographic hash and SHAKE256 extendable-output functions (XOF).
@@ -39,7 +40,8 @@ install.packages("secretbase", repos = "https://shikokuchuo.r-universe.dev")
 
 ### Quick Start
 
-`secretbase` offers one main function: `sha3()`
+`secretbase` offers the functions: `sha3()` for objects and `sha3file()`
+for files.
 
 To use:
 
@@ -67,10 +69,10 @@ sha3("", bits = 512)
 
 Hash arbitrary R objects:
 
-- done in-place, in a ‘streaming’ fashion, by R serialization but
-  without allocation of the serialized object
-- ensures portability by always using R serialization version 3, big
-  endian representation, skipping the headers
+- using R serialization in a memory-efficient ‘streaming’ manner without
+  allocation of the serialized object
+- ensures portability by always using serialization v3 XDR, skipping the
+  headers (which contain R version and encoding information)
 
 ``` r
 sha3(data.frame(a = 1, b = 2), bits = 160)
@@ -80,15 +82,25 @@ sha3(NULL)
 #> [1] "b3e37e4c5def1bfb2841b79ef8503b83d1fed46836b5b913d7c16de92966dcee"
 ```
 
-To hash to integer:
+Hash files:
+
+- read in a streaming fashion so can be larger than memory
+
+``` r
+file <- tempfile(); cat("secret base", file = file)
+sha3file(file)
+#> [1] "a721d57570e7ce366adee2fccbe9770723c6e3622549c31c7cab9dbb4a795520"
+```
+
+Hash to integer:
 
 - specify ‘convert’ as `NA`
 - specify ‘bits’ as `32` for a single integer value
 
 ``` r
-sha3("秘密の基地の中", convert = NA)
-#> [1]  1706118765  1394124073 -1208837861  -385136950  -692327823  -291994555
-#> [7]   528021721  -384171368
+sha3("秘密の基地の中", bits = 384, convert = NA)
+#>  [1]  1421990570   338241144  1760362273 -1213241427  1313032644 -1154474231
+#>  [7]  1041052480   697347630 -1488396834  -917712316  1835427495  2044829552
 
 sha3("秘密の基地の中", bits = 32, convert = NA)
 #> [1] 2000208511
