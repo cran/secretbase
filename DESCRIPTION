@@ -1,7 +1,7 @@
 Package: secretbase
 Type: Package
 Title: Cryptographic Hash and Extendable-Output Functions
-Version: 0.3.0
+Version: 0.3.0.1
 Description: SHA-256, SHA-3 cryptographic hash and SHAKE256 extendable-output
     functions (XOF). The SHA-3 Secure Hash Standard was published by the
     National Institute of Standards and Technology (NIST) in 2015 at
@@ -27,9 +27,9 @@ Encoding: UTF-8
 Depends: R (>= 3.5)
 RoxygenNote: 7.3.1
 NeedsCompilation: yes
-Packaged: 2024-02-21 10:59:22 UTC; cg334
+Packaged: 2024-02-29 21:22:49 UTC; cg334
 Author: Charlie Gao [aut, cre] (<https://orcid.org/0000-0002-0750-061X>),
   Hibiki AI Limited [cph]
 Maintainer: Charlie Gao <charlie.gao@shikokuchuo.net>
 Repository: CRAN
-Date/Publication: 2024-02-21 12:00:02 UTC
+Date/Publication: 2024-03-01 07:30:02 UTC

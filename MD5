@@ -1,8 +1,8 @@
-fd6d1d8e5f70c0447997eb965719ba59 *DESCRIPTION
+4f17c89d4dc953b5af7d12e2b8a2d378 *DESCRIPTION
 ecb4a997b6f907a70e5629ce01d12741 *NAMESPACE
-60ef68b45775c1781dd64f9717237ca2 *NEWS.md
+f54e82ad6e9dcaa21c3061ea8542cf9d *NEWS.md
 c31ba111319c4e2c66c5e860f9a337a3 *R/base.R
-50409ae05285c8bbf462fef535abe18f *README.md
+b1d9c7541f5cca01cac25f6d92cd384d *README.md
 8faf250d78a120ba4c7ea2186efddd24 *build/partial.rdb
 90a8ce992cf417968af9ee94f8632ac7 *inst/CITATION
 6b6443f23ef1cfad27b69adfbe4872f2 *man/secretbase-package.Rd
@@ -10,6 +10,7 @@ be6ff18665b4bd12adf267ba071f2b64 *man/sha256.Rd
 8db8c21667c6a3407b9c0e8e705e8b05 *man/sha3.Rd
 d25d5af44b59cd40d3830b54f7a7cf7f *src/Makevars
 f17ec18f7e556495ce381da413562ef3 *src/init.c
-6b86d9632e8156ead9c41b95b1cbf113 *src/secret.c
-c5ef8621396016ef1839e14ea3bc825f *src/secret.h
+319f75602d3ab153f58585be5a73ab40 *src/secret.c
+32b9c6234aa52bc94d4cc204f0992d3c *src/secret.h
+e7ca93620501e8e8272b97f89400aac0 *src/secret2.c
 b50afc845bd09fdb52361c75d0a8506c *tests/tests.R

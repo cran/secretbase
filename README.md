@@ -29,13 +29,13 @@ Fast and memory-efficient implementation using the core algorithms from
 
 ### Installation
 
-Install the latest release from CRAN:
+Install the latest version from the R-releases R-universe, or CRAN:
 
 ``` r
-install.packages("secretbase")
+install.packages("secretbase", repos = "https://r-releases.r-universe.dev")
 ```
 
-or the development version from rOpenSci R-universe:
+Or the development version from the author’s R-universe:
 
 ``` r
 install.packages("secretbase", repos = "https://shikokuchuo.r-universe.dev")
@@ -125,12 +125,9 @@ Simulation, Vol. 135, May 2017, pp. 3-17
 
 Links:
 
-`secretbase` website: <https://shikokuchuo.net/secretbase/><br />
-`secretbase` on CRAN:
-<https://cran.r-project.org/package=secretbase><br />
+◈ secretbase R package: <https://shikokuchuo.net/secretbase/>
 
-Mbed TLS website:
-<https://www.trustedfirmware.org/projects/mbed-tls/><br />
+Mbed TLS website: <https://www.trustedfirmware.org/projects/mbed-tls/>
 
 –
 

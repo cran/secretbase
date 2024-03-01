@@ -1,3 +1,7 @@
+# secretbase 0.3.0.1
+
+* CRAN release correcting for Clang-UBSAN checks.
+
 # secretbase 0.3.0
 
 * Adds SHA-256 cryptographic hash algorithm.
