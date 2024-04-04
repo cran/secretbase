@@ -1,3 +1,8 @@
+# secretbase 0.4.0
+
+* Adds HMAC generation to `sha256()`.
+* Adds SipHash pseudo-random function (PRF) as a fast, cryptographically-strong keyed hash.
+
 # secretbase 0.3.0.1
 
 * CRAN release correcting for Clang-UBSAN checks.

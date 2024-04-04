@@ -18,20 +18,12 @@
 
 #' secretbase: Cryptographic Hash and Extendable-Output Functions
 #'
-#' SHA-256, SHA-3 cryptographic hash and SHAKE256 extendable-output functions
-#'     (XOF). Fast and memory-efficient implementation using the core algorithms
-#'     from 'Mbed TLS' under the Trusted Firmware Project
-#'     \url{https://www.trustedfirmware.org/projects/mbed-tls/}.\cr\cr The SHA-3
-#'     cryptographic hash functions are SHA3-224, SHA3-256, SHA3-384 and
-#'     SHA3-512, each an instance of the Keccak algorithm. SHAKE256 is one of
-#'     the two XOFs of the SHA-3 family, along with SHAKE128 (not implemented).
-#'     
-#' @references The SHA-3 Secure Hash Standard was published by the National
-#'     Institute of Standards and Technology (NIST) in 2015 at
-#'     \doi{doi:10.6028/NIST.FIPS.202}.
-#'     
-#'     The SHA-256 Secure Hash Standard was published by NIST in 2002 at
-#'     \url{https://csrc.nist.gov/publications/fips/fips180-2/fips180-2.pdf}.
+#' Fast and memory-efficient streaming hash functions. Performs direct hashing
+#'     of strings, raw bytes, and files potentially larger than memory, as well
+#'     as hashing in-memory objects through R's serialization mechanism, without
+#'     requiring allocation of the serialized object. Implementations include
+#'     the SHA-256 and SHA-3 cryptographic hash functions, SHAKE256
+#'     extendable-output function (XOF), and 'SipHash' pseudo-random function.
 #'
 #' @encoding UTF-8
 #' @author Charlie Gao \email{charlie.gao@@shikokuchuo.net}
@@ -43,31 +35,39 @@
 
 # secretbase - Main Functions --------------------------------------------------
 
-#' Cryptographic Hashing Using the SHA-3 Algorithms
+#' SHA-3 Cryptographic Hash Algorithms and SHAKE256 XOF
 #'
-#' Returns a SHA-3 hash of the supplied R object or file.
+#' Returns a SHA-3 or SHAKE256 hash of the supplied object or file.
 #'
-#' @param x R object to hash. A character string or raw vector (without
-#'     attributes) is hashed 'as is'. All other objects are hashed using R
-#'     serialization in a memory-efficient 'streaming' manner, without
-#'     allocation of the serialized object. To ensure portability, serialization
-#'     v3 XDR is always used with headers skipped (as these contain R version
-#'     and encoding information).
+#' @param x object to hash. A character string or raw vector (without
+#'     attributes) is hashed 'as is'. All other objects are stream hashed using
+#'     R serialization, but without requiring allocation of the serialized
+#'     object. To ensure portability, serialization version 3 big-endian
+#'     represenation is always used with headers skipped (as these contain R
+#'     version and native encoding information).
 #' @param bits [default 256L] output size of the returned hash. If one of 224,
-#'     256, 384 or 512, uses the relevant SHA-3 cryptographic hash function. For
-#'     all other values, uses the SHAKE256 extendable-output function (XOF).
+#'     256, 384 or 512, uses the respective SHA-3 cryptographic hash function.
+#'     For all other values, uses the SHAKE256 extendable-output function (XOF).
 #'     Must be between 8 and 2^24 and coercible to integer.
 #' @param convert [default TRUE] if TRUE, the hash is converted to its hex
 #'     representation as a character string, if FALSE, output directly as a raw
 #'     vector, or if NA, a vector of (32-bit) integer values.
 #' @param file character file name / path. If specified, 'x' is ignored. The
-#'     file is hashed in a streaming fashion and may be larger than memory.
+#'     file is stream hashed, thus capable of handling files larger than memory.
 #'
 #' @return A character string, raw or integer vector depending on 'convert'.
 #'
 #' @details To produce single integer values suitable for use as random seeds
 #'     for R's pseudo random number generators (RNGs), set 'bits' to 32 and
 #'     'convert' to NA.
+#'     
+#'     The SHA-3 Secure Hash Standard was published by the National Institute of
+#'     Standards and Technology (NIST) in 2015 at
+#'     \doi{doi:10.6028/NIST.FIPS.202}.
+#'     
+#'     This implementation is based on one by 'The Mbed TLS Contributors' under
+#'     the 'Mbed TLS' Trusted Firmware Project at
+#'     \url{https://www.trustedfirmware.org/projects/mbed-tls}.
 #'
 #' @examples
 #' # SHA3-256 hash as character string:
@@ -99,13 +99,26 @@ sha3 <- function(x, bits = 256L, convert = TRUE, file)
   if (missing(file)) .Call(secretbase_sha3, x, bits, convert) else
     .Call(secretbase_sha3_file, file, bits, convert)
 
-#' Cryptographic Hashing Using the SHA-256 Algorithm
+#' SHA-256 Cryptographic Hash Algorithm
 #'
-#' Returns a SHA-256 hash of the supplied R object or file.
+#' Returns a SHA-256 hash of the supplied object or file, or HMAC if a secret
+#'     key is supplied.
 #'
 #' @inheritParams sha3
+#' @param key [default NULL] If NULL, the SHA-256 hash of 'x' is returned.
+#'     Alternatively, supply a secret key as a character string or raw vector to
+#'     generate an HMAC. Note: for character vectors only the first element is
+#'     used.
 #'
 #' @return A character string, raw or integer vector depending on 'convert'.
+#' 
+#' @details The SHA-256 Secure Hash Standard was published by the National
+#'     Institute of Standards and Technology (NIST) in 2002 at
+#'     \url{https://csrc.nist.gov/publications/fips/fips180-2/fips180-2.pdf}.
+#'     
+#'     This implementation is based on one by 'The Mbed TLS Contributors' under
+#'     the 'Mbed TLS' Trusted Firmware Project at
+#'     \url{https://www.trustedfirmware.org/projects/mbed-tls}.
 #'
 #' @examples
 #' # SHA-256 hash as character string:
@@ -118,9 +131,66 @@ sha3 <- function(x, bits = 256L, convert = TRUE, file)
 #' file <- tempfile(); cat("secret base", file = file)
 #' sha256(file = file)
 #' unlink(file)
+#' 
+#' # SHA-256 HMAC using a character string secret key:
+#' sha256("secret", key = "base")
+#' 
+#' # SHA-256 HMAC using a raw vector secret key:
+#' sha256("secret", key = charToRaw("base"))
 #'
 #' @export
 #'
-sha256 <- function(x, convert = TRUE, file)
-  if (missing(file)) .Call(secretbase_sha256, x, convert) else
-    .Call(secretbase_sha256_file, file, convert)
+sha256 <- function(x, key = NULL, convert = TRUE, file)
+  if (missing(file)) .Call(secretbase_sha256, x, key, convert) else
+    .Call(secretbase_sha256_file, file, key, convert)
+
+#' SipHash Pseudorandom Function
+#'
+#' Returns a fast, cryptographically-strong SipHash keyed hash of the supplied
+#'     object or file. SipHash-1-3 is optimised for performance. Note: SipHash
+#'     is not a cryptographic hash algorithm.
+#'
+#' @inheritParams sha3
+#' @param key [default NULL] a character string or raw vector comprising the 16
+#'     byte (128 bit) key data, or else NULL which is equivalent to '0'. If a
+#'     longer vector is supplied, only the first 16 bytes are used, and if
+#'     shorter, padded with trailing '0'. Note: for character vectors only the
+#'     first element is used.
+#'
+#' @return A character string, raw or integer vector depending on 'convert'.
+#' 
+#' @details The SipHash family of cryptographically-strong pseudorandom
+#'     functions (PRFs) are described in 'SipHash: a fast short-input PRF',
+#'     Jean-Philippe Aumasson and Daniel J. Bernstein, Paper 2012/351, 2012,
+#'     Cryptology ePrint Archive at \url{https://ia.cr/2012/351}.
+#'     
+#'     This implementation is based on the SipHash streaming implementation by
+#'     Daniele Nicolodi, David Rheinsberg and Tom Gundersen at
+#'     \url{https://github.com/c-util/c-siphash}. This is in turn based on the
+#'     SipHash reference implementation by Jean-Philippe Aumasson and Daniel J.
+#'     Bernstein released to the public domain at
+#'     \url{https://github.com/veorq/SipHash}.
+#'
+#' @examples
+#' # SipHash-1-3 hash as character string:
+#' siphash13("secret base")
+#'
+#' # SipHash-1-3 hash as raw vector:
+#' siphash13("secret base", convert = FALSE)
+#' 
+#' # SipHash-1-3 hash using a character string key:
+#' siphash13("secret", key = "base")
+#' 
+#' # SipHash-1-3 hash using a raw vector key:
+#' siphash13("secret", key = charToRaw("base"))
+#' 
+#' # SipHash-1-3 hash a file:
+#' file <- tempfile(); cat("secret base", file = file)
+#' siphash13(file = file)
+#' unlink(file)
+#'
+#' @export
+#'
+siphash13 <- function(x, key = NULL, convert = TRUE, file)
+  if (missing(file)) .Call(secretbase_siphash13, x, key, convert) else
+    .Call(secretbase_siphash13_file, file, key, convert)
