@@ -22,7 +22,7 @@
 #'     of strings, raw bytes, and files potentially larger than memory, as well
 #'     as hashing in-memory objects through R's serialization mechanism, without
 #'     requiring allocation of the serialized object. Implementations include
-#'     the SHA-256 and SHA-3 cryptographic hash functions, SHAKE256
+#'     the SHA-256, SHA-3 and Keccak cryptographic hash functions, SHAKE256
 #'     extendable-output function (XOF), and 'SipHash' pseudo-random function.
 #'
 #' @encoding UTF-8
@@ -35,20 +35,16 @@
 
 # secretbase - Main Functions --------------------------------------------------
 
-#' SHA-3 Cryptographic Hash Algorithms and SHAKE256 XOF
+#' SHA-3 Cryptographic Hash Algorithms
 #'
-#' Returns a SHA-3 or SHAKE256 hash of the supplied object or file.
+#' Returns a SHA-3 hash of the supplied object or file.
 #'
 #' @param x object to hash. A character string or raw vector (without
 #'     attributes) is hashed 'as is'. All other objects are stream hashed using
-#'     R serialization, but without requiring allocation of the serialized
-#'     object. To ensure portability, serialization version 3 big-endian
-#'     represenation is always used with headers skipped (as these contain R
-#'     version and native encoding information).
-#' @param bits [default 256L] output size of the returned hash. If one of 224,
-#'     256, 384 or 512, uses the respective SHA-3 cryptographic hash function.
-#'     For all other values, uses the SHAKE256 extendable-output function (XOF).
-#'     Must be between 8 and 2^24 and coercible to integer.
+#'     R serialization (but without allocation of the serialized object).
+#' @param bits [default 256L] output size of the returned hash. Must be one of
+#'     224, 256, 384 or 512. For legacy reasons (usage is deprecated), all other
+#'     values will return the result of \code{\link{shake256}}.
 #' @param convert [default TRUE] if TRUE, the hash is converted to its hex
 #'     representation as a character string, if FALSE, output directly as a raw
 #'     vector, or if NA, a vector of (32-bit) integer values.
@@ -56,13 +52,15 @@
 #'     file is stream hashed, thus capable of handling files larger than memory.
 #'
 #' @return A character string, raw or integer vector depending on 'convert'.
-#'
-#' @details To produce single integer values suitable for use as random seeds
-#'     for R's pseudo random number generators (RNGs), set 'bits' to 32 and
-#'     'convert' to NA.
 #'     
-#'     The SHA-3 Secure Hash Standard was published by the National Institute of
-#'     Standards and Technology (NIST) in 2015 at
+#' @section R Serialization Stream Hashing:
+#'     
+#'     Where this is used, serialization is always version 3 big-endian
+#'     represenation and the headers (containing R version and native encoding
+#'     information) are skipped to ensure portability across platforms.
+#'     
+#' @references The SHA-3 Secure Hash Standard was published by the National
+#'     Institute of Standards and Technology (NIST) in 2015 at
 #'     \doi{doi:10.6028/NIST.FIPS.202}.
 #'     
 #'     This implementation is based on one by 'The Mbed TLS Contributors' under
@@ -84,9 +82,6 @@
 #' 
 #' # SHA3-512 hash as character string:
 #' sha3("secret base", bits = 512)
-#' 
-#' # SHAKE256 hash to integer:
-#' sha3("secret base", bits = 32L, convert = NA)
 #'
 #' # SHA3-256 hash a file:
 #' file <- tempfile(); cat("secret base", file = file)
@@ -99,6 +94,96 @@ sha3 <- function(x, bits = 256L, convert = TRUE, file)
   if (missing(file)) .Call(secretbase_sha3, x, bits, convert) else
     .Call(secretbase_sha3_file, file, bits, convert)
 
+#' SHAKE256 Extendable Output Function
+#'
+#' Returns a SHAKE256 hash of the supplied object or file.
+#'
+#' @inheritParams sha3
+#' @param bits [default 256L] output size of the returned hash. Must be between
+#'     8 and 2^24 and coercible to integer.
+#'
+#' @return A character string, raw or integer vector depending on 'convert'.
+#' 
+#' @details To produce single integer values suitable for use as random seeds
+#'     for R's pseudo random number generators (RNGs), set 'bits' to 32 and
+#'     'convert' to NA.
+#'     
+#' @inheritSection sha3 R Serialization Stream Hashing
+#'
+#' @references This implementation is based on one by 'The Mbed TLS
+#'     Contributors' under the 'Mbed TLS' Trusted Firmware Project at
+#'     \url{https://www.trustedfirmware.org/projects/mbed-tls}.
+#'
+#' @examples
+#' # SHAKE256 hash as character string:
+#' shake256("secret base")
+#'
+#' # SHAKE256 hash as raw vector:
+#' shake256("secret base", convert = FALSE)
+#' 
+#' # SHAKE256 hash to integer:
+#' sha3("secret base", bits = 32L, convert = NA)
+#'
+#' # SHAKE256 hash a file:
+#' file <- tempfile(); cat("secret base", file = file)
+#' shake256(file = file)
+#' unlink(file)
+#'
+#' @export
+#'
+shake256 <- function(x, bits = 256L, convert = TRUE, file)
+  if (missing(file)) .Call(secretbase_shake256, x, bits, convert) else
+    .Call(secretbase_shake256_file, file, bits, convert)
+
+#' Keccak Cryptographic Hash Algorithms
+#'
+#' Returns a Keccak hash of the supplied object or file.
+#'
+#' @inheritParams sha3
+#' @param bits [default 256L] output size of the returned hash. Must be one of
+#'     224, 256, 384 or 512.
+#'
+#' @return A character string, raw or integer vector depending on 'convert'.
+#'
+#' @inheritSection sha3 R Serialization Stream Hashing
+#' 
+#' @references Keccak is the underlying algorithm for SHA-3, and is identical
+#'     apart from the value of the padding parameter.
+#'     
+#'     The Keccak algorithm was designed by G. Bertoni, J. Daemen, M. Peeters
+#'     and G. Van Assche.
+#'     
+#'     This implementation is based on one by 'The Mbed TLS Contributors' under
+#'     the 'Mbed TLS' Trusted Firmware Project at
+#'     \url{https://www.trustedfirmware.org/projects/mbed-tls}.
+#'
+#' @examples
+#' # Keccak-256 hash as character string:
+#' keccak("secret base")
+#'
+#' # Keccak-256 hash as raw vector:
+#' keccak("secret base", convert = FALSE)
+#' 
+#' # Keccak-224 hash as character string:
+#' keccak("secret base", bits = 224)
+#' 
+#' # Keccak-384 hash as character string:
+#' keccak("secret base", bits = 384)
+#' 
+#' # Keccak-512 hash as character string:
+#' keccak("secret base", bits = 512)
+#' 
+#' # Keccak-256 hash a file:
+#' file <- tempfile(); cat("secret base", file = file)
+#' keccak(file = file)
+#' unlink(file)
+#'
+#' @export
+#'
+keccak <- function(x, bits = 256L, convert = TRUE, file)
+  if (missing(file)) .Call(secretbase_keccak, x, bits, convert) else
+    .Call(secretbase_keccak_file, file, bits, convert)
+
 #' SHA-256 Cryptographic Hash Algorithm
 #'
 #' Returns a SHA-256 hash of the supplied object or file, or HMAC if a secret
@@ -106,13 +191,15 @@ sha3 <- function(x, bits = 256L, convert = TRUE, file)
 #'
 #' @inheritParams sha3
 #' @param key [default NULL] If NULL, the SHA-256 hash of 'x' is returned.
-#'     Alternatively, supply a secret key as a character string or raw vector to
+#'     Alternatively, supply a character string or raw vector as a secret key to
 #'     generate an HMAC. Note: for character vectors only the first element is
 #'     used.
 #'
 #' @return A character string, raw or integer vector depending on 'convert'.
+#'     
+#' @inheritSection sha3 R Serialization Stream Hashing
 #' 
-#' @details The SHA-256 Secure Hash Standard was published by the National
+#' @references The SHA-256 Secure Hash Standard was published by the National
 #'     Institute of Standards and Technology (NIST) in 2002 at
 #'     \url{https://csrc.nist.gov/publications/fips/fips180-2/fips180-2.pdf}.
 #'     
@@ -158,8 +245,10 @@ sha256 <- function(x, key = NULL, convert = TRUE, file)
 #'     first element is used.
 #'
 #' @return A character string, raw or integer vector depending on 'convert'.
+#'     
+#' @inheritSection sha3 R Serialization Stream Hashing
 #' 
-#' @details The SipHash family of cryptographically-strong pseudorandom
+#' @references The SipHash family of cryptographically-strong pseudorandom
 #'     functions (PRFs) are described in 'SipHash: a fast short-input PRF',
 #'     Jean-Philippe Aumasson and Daniel J. Bernstein, Paper 2012/351, 2012,
 #'     Cryptology ePrint Archive at \url{https://ia.cr/2012/351}.

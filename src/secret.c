@@ -32,12 +32,31 @@
  *  https://nvlpubs.nist.gov/nistpubs/fips/nist.fips.202.pdf
  */
 
+typedef enum {
+  MBEDTLS_SHA3_SHAKE256 = 0,
+  MBEDTLS_SHA3_224,
+  MBEDTLS_SHA3_256,
+  MBEDTLS_SHA3_384,
+  MBEDTLS_SHA3_512
+} mbedtls_sha3_id;
+
+typedef struct mbedtls_sha3_family_functions {
+  mbedtls_sha3_id id;
+  uint16_t r;
+  uint16_t olen;
+  uint8_t xor_byte;
+} mbedtls_sha3_family_functions;
+
 static mbedtls_sha3_family_functions sha3_families[] = {
   { MBEDTLS_SHA3_SHAKE256, 1088,   0, 0x1F },
   { MBEDTLS_SHA3_224,      1152, 224, 0x06 },
   { MBEDTLS_SHA3_256,      1088, 256, 0x06 },
   { MBEDTLS_SHA3_384,       832, 384, 0x06 },
-  { MBEDTLS_SHA3_512,       576, 512, 0x06 }
+  { MBEDTLS_SHA3_512,       576, 512, 0x06 },
+  { MBEDTLS_SHA3_224,      1152, 224, 0x01 },
+  { MBEDTLS_SHA3_256,      1088, 256, 0x01 },
+  { MBEDTLS_SHA3_384,       832, 384, 0x01 },
+  { MBEDTLS_SHA3_512,       576, 512, 0x01 }
 };
 
 static const uint64_t rc[24] = {
@@ -248,7 +267,7 @@ static void hash_object(mbedtls_sha3_context *ctx, const SEXP x) {
     break;
   case RAWSXP:
     if (ATTRIB(x) == R_NilValue) {
-      mbedtls_sha3_update(ctx, (uint8_t *) STDVEC_DATAPTR(x), (size_t) XLENGTH(x));
+      mbedtls_sha3_update(ctx, (uint8_t *) DATAPTR_RO(x), (size_t) XLENGTH(x));
       return;
     }
     break;
@@ -278,7 +297,7 @@ SEXP hash_to_sexp(unsigned char *buf, size_t sz, int conv) {
   SEXP out;
   if (conv == 0) {
     out = Rf_allocVector(RAWSXP, sz);
-    memcpy(STDVEC_DATAPTR(out), buf, sz);
+    memcpy(DATAPTR(out), buf, sz);
   } else if (conv == 1) {
     char cbuf[sz + sz + 1];
     char *cptr = cbuf;
@@ -289,7 +308,7 @@ SEXP hash_to_sexp(unsigned char *buf, size_t sz, int conv) {
     UNPROTECT(1);
   } else {
     out = Rf_allocVector(INTSXP, sz / sizeof(int));
-    memcpy(STDVEC_DATAPTR(out), buf, sz);
+    memcpy(DATAPTR(out), buf, sz);
   }
   
   return out;
@@ -297,20 +316,35 @@ SEXP hash_to_sexp(unsigned char *buf, size_t sz, int conv) {
 }
 
 static SEXP secretbase_sha3_impl(const SEXP x, const SEXP bits, const SEXP convert,
-                                 void (*const hash_func)(mbedtls_sha3_context *, SEXP)) {
+                                 void (*const hash_func)(mbedtls_sha3_context *, SEXP),
+                                 const int offset) {
   
   const int conv = LOGICAL(convert)[0];
   const int bt = Rf_asInteger(bits);
+  mbedtls_sha3_id id;
+  
+  if (offset < 0) {
+    id = MBEDTLS_SHA3_SHAKE256;
+  } else {
+    switch(bt) {
+    case 256:
+      id = MBEDTLS_SHA3_256 + offset; break;
+    case 512:
+      id = MBEDTLS_SHA3_512 + offset; break;
+    case 224:
+      id = MBEDTLS_SHA3_224 + offset; break;
+    case 384:
+      id = MBEDTLS_SHA3_384 + offset; break;
+    default:
+      if (offset) Rf_error("'bits' must be 224, 256, 384 or 512");
+      id = MBEDTLS_SHA3_SHAKE256;
+    }
+  }
+  
   if (bt < 8 || bt > (1 << 24))
     Rf_error("'bits' outside valid range of 8 to 2^24");
   const size_t sz = (size_t) (bt / 8);
   unsigned char buf[sz];
-  
-  mbedtls_sha3_id id = bt == 256 ? MBEDTLS_SHA3_256 :
-    bt == 512 ? MBEDTLS_SHA3_512 :
-    bt == 224 ? MBEDTLS_SHA3_224 :
-    bt == 384 ? MBEDTLS_SHA3_384 :
-    MBEDTLS_SHA3_SHAKE256;
   
   mbedtls_sha3_context ctx;
   mbedtls_sha3_init(&ctx);
@@ -327,12 +361,36 @@ static SEXP secretbase_sha3_impl(const SEXP x, const SEXP bits, const SEXP conve
 
 SEXP secretbase_sha3(SEXP x, SEXP bits, SEXP convert) {
   
-  return secretbase_sha3_impl(x, bits, convert, hash_object);
+  return secretbase_sha3_impl(x, bits, convert, hash_object, 0);
   
 }
 
 SEXP secretbase_sha3_file(SEXP x, SEXP bits, SEXP convert) {
   
-  return secretbase_sha3_impl(x, bits, convert, hash_file);
+  return secretbase_sha3_impl(x, bits, convert, hash_file, 0);
+  
+}
+
+SEXP secretbase_shake256(SEXP x, SEXP bits, SEXP convert) {
+  
+  return secretbase_sha3_impl(x, bits, convert, hash_object, -1);
+  
+}
+
+SEXP secretbase_shake256_file(SEXP x, SEXP bits, SEXP convert) {
+  
+  return secretbase_sha3_impl(x, bits, convert, hash_file, -1);
+  
+}
+
+SEXP secretbase_keccak(SEXP x, SEXP bits, SEXP convert) {
+  
+  return secretbase_sha3_impl(x, bits, convert, hash_object, 4);
+  
+}
+
+SEXP secretbase_keccak_file(SEXP x, SEXP bits, SEXP convert) {
+  
+  return secretbase_sha3_impl(x, bits, convert, hash_file, 4);
   
 }

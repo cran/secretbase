@@ -2,22 +2,18 @@
 % Please edit documentation in R/base.R
 \name{sha3}
 \alias{sha3}
-\title{SHA-3 Cryptographic Hash Algorithms and SHAKE256 XOF}
+\title{SHA-3 Cryptographic Hash Algorithms}
 \usage{
 sha3(x, bits = 256L, convert = TRUE, file)
 }
 \arguments{
 \item{x}{object to hash. A character string or raw vector (without
 attributes) is hashed 'as is'. All other objects are stream hashed using
-R serialization, but without requiring allocation of the serialized
-object. To ensure portability, serialization version 3 big-endian
-represenation is always used with headers skipped (as these contain R
-version and native encoding information).}
+R serialization (but without allocation of the serialized object).}
 
-\item{bits}{[default 256L] output size of the returned hash. If one of 224,
-256, 384 or 512, uses the respective SHA-3 cryptographic hash function.
-For all other values, uses the SHAKE256 extendable-output function (XOF).
-Must be between 8 and 2^24 and coercible to integer.}
+\item{bits}{[default 256L] output size of the returned hash. Must be one of
+224, 256, 384 or 512. For legacy reasons (usage is deprecated), all other
+values will return the result of \code{\link{shake256}}.}
 
 \item{convert}{[default TRUE] if TRUE, the hash is converted to its hex
 representation as a character string, if FALSE, output directly as a raw
@@ -30,21 +26,16 @@ file is stream hashed, thus capable of handling files larger than memory.}
 A character string, raw or integer vector depending on 'convert'.
 }
 \description{
-Returns a SHA-3 or SHAKE256 hash of the supplied object or file.
+Returns a SHA-3 hash of the supplied object or file.
 }
-\details{
-To produce single integer values suitable for use as random seeds
-    for R's pseudo random number generators (RNGs), set 'bits' to 32 and
-    'convert' to NA.
+\section{R Serialization Stream Hashing}{
+
     
-    The SHA-3 Secure Hash Standard was published by the National Institute of
-    Standards and Technology (NIST) in 2015 at
-    \doi{doi:10.6028/NIST.FIPS.202}.
-    
-    This implementation is based on one by 'The Mbed TLS Contributors' under
-    the 'Mbed TLS' Trusted Firmware Project at
-    \url{https://www.trustedfirmware.org/projects/mbed-tls}.
+    Where this is used, serialization is always version 3 big-endian
+    represenation and the headers (containing R version and native encoding
+    information) are skipped to ensure portability across platforms.
 }
+
 \examples{
 # SHA3-256 hash as character string:
 sha3("secret base")
@@ -61,12 +52,18 @@ sha3("secret base", bits = 384)
 # SHA3-512 hash as character string:
 sha3("secret base", bits = 512)
 
-# SHAKE256 hash to integer:
-sha3("secret base", bits = 32L, convert = NA)
-
 # SHA3-256 hash a file:
 file <- tempfile(); cat("secret base", file = file)
 sha3(file = file)
 unlink(file)
 
+}
+\references{
+The SHA-3 Secure Hash Standard was published by the National
+    Institute of Standards and Technology (NIST) in 2015 at
+    \doi{doi:10.6028/NIST.FIPS.202}.
+    
+    This implementation is based on one by 'The Mbed TLS Contributors' under
+    the 'Mbed TLS' Trusted Firmware Project at
+    \url{https://www.trustedfirmware.org/projects/mbed-tls}.
 }
