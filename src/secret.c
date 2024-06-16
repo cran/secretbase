@@ -214,15 +214,20 @@ static void mbedtls_sha3_finish(mbedtls_sha3_context *ctx, uint8_t *output, size
 
 // secretbase - internals ------------------------------------------------------
 
+#if !defined(MBEDTLS_CT_ASM)
 static void * (*const volatile secure_memset)(void *, int, size_t) = memset;
+#endif
 
-void clear_buffer(void *buf, size_t sz) {
-  
+inline void clear_buffer(void *buf, size_t sz) {
+#ifdef MBEDTLS_CT_ASM
+  memset(buf, 0, sz);
+  asm volatile ("" ::: "memory");
+#else
   secure_memset(buf, 0, sz);
-  
+#endif
 }
 
-static void hash_bytes(R_outpstream_t stream, void *src, int len) {
+static inline void hash_bytes(R_outpstream_t stream, void *src, int len) {
   
   secretbase_sha3_context *sctx = (secretbase_sha3_context *) stream->data;
   sctx->skip ? (void) sctx->skip-- : mbedtls_sha3_update(sctx->ctx, (uint8_t *) src, (size_t) len);
@@ -324,6 +329,8 @@ static SEXP secretbase_sha3_impl(const SEXP x, const SEXP bits, const SEXP conve
   mbedtls_sha3_id id;
   
   if (offset < 0) {
+    if (bt < 8 || bt > (1 << 24))
+      Rf_error("'bits' outside valid range of 8 to 2^24");
     id = MBEDTLS_SHA3_SHAKE256;
   } else {
     switch(bt) {
@@ -335,14 +342,14 @@ static SEXP secretbase_sha3_impl(const SEXP x, const SEXP bits, const SEXP conve
       id = MBEDTLS_SHA3_224 + offset; break;
     case 384:
       id = MBEDTLS_SHA3_384 + offset; break;
+    case 32: // for targets 1.7.0 compat
+      id = MBEDTLS_SHA3_SHAKE256; break;
     default:
-      if (offset) Rf_error("'bits' must be 224, 256, 384 or 512");
       id = MBEDTLS_SHA3_SHAKE256;
+      Rf_error("'bits' must be 224, 256, 384 or 512");
     }
   }
   
-  if (bt < 8 || bt > (1 << 24))
-    Rf_error("'bits' outside valid range of 8 to 2^24");
   const size_t sz = (size_t) (bt / 8);
   unsigned char buf[sz];
   

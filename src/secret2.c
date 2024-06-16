@@ -313,9 +313,7 @@ static void mbedtls_sha256_update(mbedtls_sha256_context *ctx,
   ctx->total[0] += (uint32_t) ilen;
   ctx->total[0] &= 0xFFFFFFFF;
   
-  if (ctx->total[0] < (uint32_t) ilen) {
-    ctx->total[1]++;
-  }
+  if (ctx->total[0] < (uint32_t) ilen) { ctx->total[1]++; }
   
   if (left && ilen >= fill) {
     memcpy((void *) (ctx->buffer + left), input, fill);
@@ -377,7 +375,7 @@ static void mbedtls_sha256_finish(mbedtls_sha256_context *ctx,
 
 // secretbase - internals ------------------------------------------------------
 
-static void hash_bytes(R_outpstream_t stream, void *src, int len) {
+static inline void hash_bytes(R_outpstream_t stream, void *src, int len) {
   
   secretbase_sha256_context *sctx = (secretbase_sha256_context *) stream->data;
   sctx->skip ? (void) sctx->skip-- : mbedtls_sha256_update(sctx->ctx, (uint8_t *) src, (size_t) len);

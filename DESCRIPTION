@@ -1,18 +1,13 @@
 Package: secretbase
 Type: Package
-Title: Cryptographic Hash and Extendable-Output Functions
-Version: 0.5.0
-Description: Fast and memory-efficient streaming hash functions. Performs direct
-    hashing of strings, raw bytes, and files potentially larger than memory, as
-    well as hashing in-memory objects through R's serialization mechanism,
-    without requiring allocation of the serialized object. Implementations
-    include the SHA-256, SHA-3 and 'Keccak' cryptographic hash functions,
-    SHAKE256 extendable-output function (XOF), and 'SipHash' pseudo-random
-    function. The SHA-3 Secure Hash Standard was published by the National
-    Institute of Standards and Technology (NIST) in 2015 at
-    <doi:10.6028/NIST.FIPS.202>. The SHA-256 Secure Hash Standard was published
-    by NIST in 2002 at
-    <https://csrc.nist.gov/publications/fips/fips180-2/fips180-2.pdf>.
+Title: Cryptographic Hash, Extendable-Output and Base64 Functions
+Version: 1.0.0
+Description: Fast and memory-efficient streaming hash functions and base64
+    encoding and decoding. Performs direct hashing of strings and raw vectors.
+    Stream hashes files potentially larger than memory, as well as in-memory
+    objects through R's serialization mechanism. Implementations include the
+    SHA-256, SHA-3 and 'Keccak' cryptographic hash functions, SHAKE256
+    extendable-output function (XOF), and 'SipHash' pseudo-random function.
 Authors@R: 
     c(person(given = "Charlie",
              family = "Gao",
@@ -29,9 +24,9 @@ Encoding: UTF-8
 Depends: R (>= 3.5)
 RoxygenNote: 7.3.1
 NeedsCompilation: yes
-Packaged: 2024-04-25 07:10:43 UTC; cg334
+Packaged: 2024-06-16 11:01:46 UTC; cg334
 Author: Charlie Gao [aut, cre] (<https://orcid.org/0000-0002-0750-061X>),
   Hibiki AI Limited [cph]
 Maintainer: Charlie Gao <charlie.gao@shikokuchuo.net>
 Repository: CRAN
-Date/Publication: 2024-04-25 07:40:02 UTC
+Date/Publication: 2024-06-16 11:30:02 UTC
