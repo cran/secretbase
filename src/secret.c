@@ -214,11 +214,24 @@ static void mbedtls_sha3_finish(mbedtls_sha3_context *ctx, uint8_t *output, size
 
 // secretbase - internals ------------------------------------------------------
 
+static inline int sb_integer(SEXP x) {
+  int out;
+  switch (TYPEOF(x)) {
+  case INTSXP:
+  case LGLSXP:
+    out = *(int * ) DATAPTR_RO(x);
+    break;
+  default:
+    out = Rf_asInteger(x);
+  }
+  return out;
+}
+
 #if !defined(MBEDTLS_CT_ASM)
 static void * (*const volatile secure_memset)(void *, int, size_t) = memset;
 #endif
 
-inline void clear_buffer(void *buf, size_t sz) {
+inline void sb_clear_buffer(void *buf, size_t sz) {
 #ifdef MBEDTLS_CT_ASM
   memset(buf, 0, sz);
   asm volatile ("" ::: "memory");
@@ -236,15 +249,14 @@ static inline void hash_bytes(R_outpstream_t stream, void *src, int len) {
 
 static void hash_file(mbedtls_sha3_context *ctx, const SEXP x) {
   
-  if (TYPEOF(x) != STRSXP)
-    Rf_error("'file' must be specified as a character string");
-  const char *file = R_ExpandFileName(CHAR(STRING_ELT(x, 0)));
+  SB_ASSERT_STR(x);
+  const char *file = R_ExpandFileName(SB_STRING(x));
   unsigned char buf[SB_BUF_SIZE];
   FILE *f;
   size_t cur;
   
   if ((f = fopen(file, "rb")) == NULL)
-    Rf_error("file not found or no read permission at '%s'", file);
+    ERROR_FOPEN(file);
   
   setbuf(f, NULL);
   
@@ -254,7 +266,7 @@ static void hash_file(mbedtls_sha3_context *ctx, const SEXP x) {
   
   if (ferror(f)) {
     fclose(f);
-    Rf_error("file read error at '%s'", file);
+    ERROR_FREAD(file);
   }
   fclose(f);
   
@@ -265,7 +277,7 @@ static void hash_object(mbedtls_sha3_context *ctx, const SEXP x) {
   switch (TYPEOF(x)) {
   case STRSXP:
     if (XLENGTH(x) == 1 && ATTRIB(x) == R_NilValue) {
-      const char *s = CHAR(STRING_ELT(x, 0));
+      const char *s = SB_STRING(x);
       mbedtls_sha3_update(ctx, (uint8_t *) s, strlen(s));
       return;
     }
@@ -297,12 +309,12 @@ static void hash_object(mbedtls_sha3_context *ctx, const SEXP x) {
   
 }
 
-SEXP hash_to_sexp(unsigned char *buf, size_t sz, int conv) {
+SEXP sb_hash_sexp(unsigned char *buf, size_t sz, int conv) {
   
   SEXP out;
   if (conv == 0) {
     out = Rf_allocVector(RAWSXP, sz);
-    memcpy(DATAPTR(out), buf, sz);
+    memcpy(SB_DATAPTR(out), buf, sz);
   } else if (conv == 1) {
     char cbuf[sz + sz + 1];
     char *cptr = cbuf;
@@ -313,7 +325,7 @@ SEXP hash_to_sexp(unsigned char *buf, size_t sz, int conv) {
     UNPROTECT(1);
   } else {
     out = Rf_allocVector(INTSXP, sz / sizeof(int));
-    memcpy(DATAPTR(out), buf, sz);
+    memcpy(SB_DATAPTR(out), buf, sz);
   }
   
   return out;
@@ -324,8 +336,9 @@ static SEXP secretbase_sha3_impl(const SEXP x, const SEXP bits, const SEXP conve
                                  void (*const hash_func)(mbedtls_sha3_context *, SEXP),
                                  const int offset) {
   
-  const int conv = LOGICAL(convert)[0];
-  const int bt = Rf_asInteger(bits);
+  SB_ASSERT_LOGICAL(convert);
+  const int conv = SB_LOGICAL(convert);
+  const int bt = sb_integer(bits);
   mbedtls_sha3_id id;
   
   if (offset < 0) {
@@ -342,8 +355,6 @@ static SEXP secretbase_sha3_impl(const SEXP x, const SEXP bits, const SEXP conve
       id = MBEDTLS_SHA3_224 + offset; break;
     case 384:
       id = MBEDTLS_SHA3_384 + offset; break;
-    case 32: // for targets 1.7.0 compat
-      id = MBEDTLS_SHA3_SHAKE256; break;
     default:
       id = MBEDTLS_SHA3_SHAKE256;
       Rf_error("'bits' must be 224, 256, 384 or 512");
@@ -358,9 +369,9 @@ static SEXP secretbase_sha3_impl(const SEXP x, const SEXP bits, const SEXP conve
   mbedtls_sha3_starts(&ctx, id);
   hash_func(&ctx, x);
   mbedtls_sha3_finish(&ctx, buf, sz);
-  clear_buffer(&ctx, sizeof(mbedtls_sha3_context));
+  sb_clear_buffer(&ctx, sizeof(mbedtls_sha3_context));
   
-  return hash_to_sexp(buf, sz, conv);
+  return sb_hash_sexp(buf, sz, conv);
   
 }
 

@@ -94,15 +94,14 @@ int mbedtls_base64_encode(unsigned char *dst, size_t dlen, size_t *olen,
   n = slen / 3 + (slen % 3 != 0);
   
   if (n > (SIZE_MAX - 1) / 4) {
-    *olen = SIZE_MAX;
-    return -1;
+    *olen = SIZE_MAX; return MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL;
   }
   
   n *= 4;
   
   if ((dlen < n + 1) || (NULL == dst)) {
     *olen = n + 1;
-    return -1;
+    return MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL;
   }
   
   n = (slen / 3) * 3;
@@ -174,21 +173,21 @@ int mbedtls_base64_decode(unsigned char *dst, size_t dlen, size_t *olen,
     }
 
     if (spaces_present) {
-      return -2;
+      return MBEDTLS_ERR_BASE64_INVALID_CHARACTER;
     }
     
-    if (src[i] > 127) { return -2; }
+    if (src[i] > 127) { return MBEDTLS_ERR_BASE64_INVALID_CHARACTER; }
     
     if (src[i] == '=') {
       if (++equals > 2) {
-        return -2;
+        return MBEDTLS_ERR_BASE64_INVALID_CHARACTER;
       }
     } else {
       if (equals != 0) {
-        return -2;
+        return MBEDTLS_ERR_BASE64_INVALID_CHARACTER;
       }
       if (mbedtls_ct_base64_dec_value(src[i]) < 0) {
-        return -2;
+        return MBEDTLS_ERR_BASE64_INVALID_CHARACTER;
       }
     }
     n++;
@@ -204,7 +203,7 @@ int mbedtls_base64_decode(unsigned char *dst, size_t dlen, size_t *olen,
   
   if (dst == NULL || dlen < n) {
     *olen = n;
-    return -1;
+    return MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL;
   }
   
   equals = 0;
@@ -248,7 +247,7 @@ static SEXP rawToChar(const unsigned char *buf, const size_t sz) {
   if (sz - i > 1) {
     REprintf("data could not be converted to a character string\n");
     out = Rf_allocVector(RAWSXP, sz);
-    memcpy(DATAPTR(out), buf, sz);
+    memcpy(SB_DATAPTR(out), buf, sz);
     return out;
   }
   
@@ -260,7 +259,7 @@ static SEXP rawToChar(const unsigned char *buf, const size_t sz) {
   
 }
 
-static inline void nano_read_bytes(R_inpstream_t stream, void *dst, int len) {
+static inline void sb_read_bytes(R_inpstream_t stream, void *dst, int len) {
   
   nano_buf *buf = (nano_buf *) stream->data;
   if (buf->cur + len > buf->len) Rf_error("unserialization error");
@@ -270,7 +269,7 @@ static inline void nano_read_bytes(R_inpstream_t stream, void *dst, int len) {
   
 }
 
-static inline void nano_write_bytes(R_outpstream_t stream, void *src, int len) {
+static inline void sb_write_bytes(R_outpstream_t stream, void *src, int len) {
   
   nano_buf *buf = (nano_buf *) stream->data;
   
@@ -288,7 +287,7 @@ static inline void nano_write_bytes(R_outpstream_t stream, void *src, int len) {
   
 }
 
-void nano_serialize_xdr(nano_buf *buf, const SEXP object) {
+static void sb_serialize(nano_buf *buf, const SEXP object) {
   
   NANO_ALLOC(buf, SB_INIT_BUFSIZE);
   
@@ -300,7 +299,7 @@ void nano_serialize_xdr(nano_buf *buf, const SEXP object) {
     R_pstream_xdr_format,
     SB_SERIAL_VER,
     NULL,
-    nano_write_bytes,
+    sb_write_bytes,
     NULL,
     R_NilValue
   );
@@ -309,7 +308,7 @@ void nano_serialize_xdr(nano_buf *buf, const SEXP object) {
   
 }
 
-SEXP nano_unserialize(unsigned char *buf, const size_t sz) {
+static SEXP sb_unserialize(unsigned char *buf, const size_t sz) {
 
   nano_buf nbuf;
   struct R_inpstream_st input_stream;
@@ -321,9 +320,9 @@ SEXP nano_unserialize(unsigned char *buf, const size_t sz) {
   R_InitInPStream(
     &input_stream,
     (R_pstream_data_t) &nbuf,
-    R_pstream_any_format,
+    R_pstream_xdr_format,
     NULL,
-    nano_read_bytes,
+    sb_read_bytes,
     NULL,
     R_NilValue
   );
@@ -332,27 +331,28 @@ SEXP nano_unserialize(unsigned char *buf, const size_t sz) {
   
 }
 
-static nano_buf nano_any_buf(const SEXP x) {
+static nano_buf sb_any_buf(const SEXP x) {
   
   nano_buf buf;
   
   switch (TYPEOF(x)) {
   case STRSXP:
     if (XLENGTH(x) == 1 && ATTRIB(x) == R_NilValue) {
-      const char *s = CHAR(STRING_ELT(x, 0));
+      const char *s = SB_STRING(x);
       NANO_INIT(&buf, (unsigned char *) s, strlen(s));
-      return buf;
+      goto resume;
     }
     break;
   case RAWSXP:
     if (ATTRIB(x) == R_NilValue) {
       NANO_INIT(&buf, (unsigned char *) DATAPTR_RO(x), XLENGTH(x));
-      return buf;
+      goto resume;
     }
   }
   
-  nano_serialize_xdr(&buf, x);
+  sb_serialize(&buf, x);
   
+  resume:
   return buf;
   
 }
@@ -361,22 +361,24 @@ static nano_buf nano_any_buf(const SEXP x) {
 
 SEXP secretbase_base64enc(SEXP x, SEXP convert) {
   
-  SEXP out;
+  SB_ASSERT_LOGICAL(convert);
+  const int conv = SB_LOGICAL(convert);
   int xc;
+  SEXP out;
   size_t olen;
   
-  nano_buf hash = nano_any_buf(x);
+  nano_buf hash = sb_any_buf(x);
   xc = mbedtls_base64_encode(NULL, 0, &olen, hash.buf, hash.cur);
   unsigned char *buf = R_Calloc(olen, unsigned char);
   xc = mbedtls_base64_encode(buf, olen, &olen, hash.buf, hash.cur);
   NANO_FREE(hash);
   CHECK_ERROR(xc);
   
-  if (*(int *) DATAPTR_RO(convert)) {
+  if (conv) {
     out = rawToChar(buf, olen);
   } else {
     out = Rf_allocVector(RAWSXP, olen);
-    memcpy(DATAPTR(out), buf, olen);
+    memcpy(SB_DATAPTR(out), buf, olen);
   }
   
   R_Free(buf);
@@ -387,15 +389,17 @@ SEXP secretbase_base64enc(SEXP x, SEXP convert) {
 
 SEXP secretbase_base64dec(SEXP x, SEXP convert) {
   
-  SEXP out;
+  SB_ASSERT_LOGICAL(convert);
+  const int conv = SB_LOGICAL(convert);
   int xc;
-  size_t inlen, olen;
   unsigned char *inbuf;
+  SEXP out;
+  size_t inlen, olen;
   
   switch (TYPEOF(x)) {
   case STRSXP:
-    inbuf = (unsigned char *) CHAR(STRING_ELT(x, 0));
-    inlen = XLENGTH(STRING_ELT(x, 0));
+    inbuf = (unsigned char *) SB_STRING(x);
+    inlen = XLENGTH(*((const SEXP *) DATAPTR_RO(x)));
     break;
   case RAWSXP:
     inbuf = RAW(x);
@@ -406,22 +410,22 @@ SEXP secretbase_base64dec(SEXP x, SEXP convert) {
   }
   
   xc = mbedtls_base64_decode(NULL, 0, &olen, inbuf, inlen);
-  if (xc == -2)
+  if (xc == MBEDTLS_ERR_BASE64_INVALID_CHARACTER)
     Rf_error("input is not valid base64");
   unsigned char *buf = R_Calloc(olen, unsigned char);
   xc = mbedtls_base64_decode(buf, olen, &olen, inbuf, inlen);
   CHECK_ERROR(xc);
   
-  switch (*(int *) DATAPTR_RO(convert)) {
+  switch (conv) {
   case 0:
     out = Rf_allocVector(RAWSXP, olen);
-    memcpy(DATAPTR(out), buf, olen);
+    memcpy(SB_DATAPTR(out), buf, olen);
     break;
   case 1:
     out = rawToChar(buf, olen);
     break;
   default:
-    out = nano_unserialize(buf, olen);
+    out = sb_unserialize(buf, olen);
   }
   
   R_Free(buf);

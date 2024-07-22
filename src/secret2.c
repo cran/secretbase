@@ -384,15 +384,14 @@ static inline void hash_bytes(R_outpstream_t stream, void *src, int len) {
 
 static void hash_file(mbedtls_sha256_context *ctx, const SEXP x) {
   
-  if (TYPEOF(x) != STRSXP)
-    Rf_error("'file' must be specified as a character string");
-  const char *file = R_ExpandFileName(CHAR(STRING_ELT(x, 0)));
+  SB_ASSERT_STR(x);
+  const char *file = R_ExpandFileName(SB_STRING(x));
   unsigned char buf[SB_BUF_SIZE];
   FILE *f;
   size_t cur;
   
   if ((f = fopen(file, "rb")) == NULL)
-    Rf_error("file not found or no read permission at '%s'", file);
+    ERROR_FOPEN(file);
   
   setbuf(f, NULL);
   
@@ -402,7 +401,7 @@ static void hash_file(mbedtls_sha256_context *ctx, const SEXP x) {
   
   if (ferror(f)) {
     fclose(f);
-    Rf_error("file read error at '%s'", file);
+    ERROR_FREAD(file);
   }
   fclose(f);
   
@@ -413,7 +412,7 @@ static void hash_object(mbedtls_sha256_context *ctx, const SEXP x) {
   switch (TYPEOF(x)) {
   case STRSXP:
     if (XLENGTH(x) == 1 && ATTRIB(x) == R_NilValue) {
-      const char *s = CHAR(STRING_ELT(x, 0));
+      const char *s = SB_STRING(x);
       mbedtls_sha256_update(ctx, (uint8_t *) s, strlen(s));
       return;
     }
@@ -445,10 +444,11 @@ static void hash_object(mbedtls_sha256_context *ctx, const SEXP x) {
   
 }
 
-static SEXP secretbase_sha256_impl(const SEXP x, SEXP key, const SEXP convert,
+static SEXP secretbase_sha256_impl(const SEXP x, const SEXP key, const SEXP convert,
                                    void (*const hash_func)(mbedtls_sha256_context *, SEXP)) {
   
-  const int conv = LOGICAL(convert)[0];
+  SB_ASSERT_LOGICAL(convert);
+  const int conv = SB_LOGICAL(convert);
   unsigned char buf[SB_SHA256_SIZE];
   
   if (key == R_NilValue) {
@@ -458,7 +458,7 @@ static SEXP secretbase_sha256_impl(const SEXP x, SEXP key, const SEXP convert,
     mbedtls_sha256_starts(&ctx);
     hash_func(&ctx, x);
     mbedtls_sha256_finish(&ctx, buf);
-    clear_buffer(&ctx, sizeof(mbedtls_sha256_context));
+    sb_clear_buffer(&ctx, sizeof(mbedtls_sha256_context));
     
   } else {
     
@@ -470,7 +470,7 @@ static SEXP secretbase_sha256_impl(const SEXP x, SEXP key, const SEXP convert,
     
     switch (TYPEOF(key)) {
     case STRSXP:
-      data = (unsigned char *) (XLENGTH(key) ? CHAR(STRING_ELT(key, 0)) : "");
+      data = (unsigned char *) (XLENGTH(key) ? SB_STRING(key) : "");
       klen = strlen((char *) data);
       break;
     case RAWSXP:
@@ -506,11 +506,11 @@ static SEXP secretbase_sha256_impl(const SEXP x, SEXP key, const SEXP convert,
     mbedtls_sha256_update(&ctx, opad, SB_SHA256_BLK);
     mbedtls_sha256_update(&ctx, buf, SB_SHA256_SIZE);
     mbedtls_sha256_finish(&ctx, buf);
-    clear_buffer(&ctx, sizeof(mbedtls_sha256_context));
+    sb_clear_buffer(&ctx, sizeof(mbedtls_sha256_context));
 
   }
   
-  return hash_to_sexp(buf, SB_SHA256_SIZE, conv);
+  return sb_hash_sexp(buf, SB_SHA256_SIZE, conv);
   
 }
 

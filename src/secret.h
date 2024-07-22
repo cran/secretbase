@@ -26,6 +26,14 @@
 #include <Rinternals.h>
 #include <R_ext/Visibility.h>
 
+#define SB_DATAPTR(x) (void *) DATAPTR_RO(x)
+#define SB_STRING(x) CHAR(*((const SEXP *) DATAPTR_RO(x)))
+#define SB_LOGICAL(x) *(int *) DATAPTR_RO(x)
+#define SB_ASSERT_LOGICAL(x) if (TYPEOF(x) != LGLSXP)          \
+Rf_error("'convert' must be a logical value")
+#define SB_ASSERT_STR(x) if (TYPEOF(x) != STRSXP)              \
+Rf_error("'file' must be a character string")
+
 #define SB_R_SERIAL_VER 3
 #define SB_SERIAL_HEADERS 6
 #define SB_BUF_SIZE 4096
@@ -40,6 +48,9 @@
 #define SB_SHA256_BLK 64
 #define SB_SIPH_SIZE 8
 #define SB_SKEY_SIZE 16
+
+#define MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL -1
+#define MBEDTLS_ERR_BASE64_INVALID_CHARACTER -2
 
 #if defined(__GNUC__) && (!defined(__ARMCC_VERSION) || \
 __ARMCC_VERSION >= 6000000)
@@ -108,9 +119,11 @@ typedef struct nano_buf_s {
 Rf_error("write buffer insufficient"); }
 #define ERROR_OUT(x) if (x->len) R_Free(x->buf);               \
 Rf_error("serialization exceeds max length of raw vector")
+#define ERROR_FOPEN(x) Rf_error("file not found or no read permission at '%s'", x)
+#define ERROR_FREAD(x) Rf_error("file read error at '%s'", x)
 
-void clear_buffer(void *, size_t);
-SEXP hash_to_sexp(unsigned char *, size_t, int);
+void sb_clear_buffer(void *, size_t);
+SEXP sb_hash_sexp(unsigned char *, size_t, int);
 
 SEXP secretbase_base64enc(SEXP, SEXP);
 SEXP secretbase_base64dec(SEXP, SEXP);

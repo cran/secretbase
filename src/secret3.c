@@ -191,15 +191,14 @@ static inline void hash_bytes(R_outpstream_t stream, void *src, int len) {
 
 static void hash_file(CSipHash *ctx, const SEXP x) {
   
-  if (TYPEOF(x) != STRSXP)
-    Rf_error("'file' must be specified as a character string");
-  const char *file = R_ExpandFileName(CHAR(STRING_ELT(x, 0)));
+  SB_ASSERT_STR(x);
+  const char *file = R_ExpandFileName(SB_STRING(x));
   unsigned char buf[SB_BUF_SIZE];
   FILE *f;
   size_t cur;
   
   if ((f = fopen(file, "rb")) == NULL)
-    Rf_error("file not found or no read permission at '%s'", file);
+    ERROR_FOPEN(file);
   
   while ((cur = fread(buf, sizeof(char), SB_BUF_SIZE, f))) {
     c_siphash_append(ctx, buf, cur);
@@ -207,7 +206,7 @@ static void hash_file(CSipHash *ctx, const SEXP x) {
   
   if (ferror(f)) {
     fclose(f);
-    Rf_error("file read error at '%s'", file);
+    ERROR_FREAD(file);
   }
   fclose(f);
   
@@ -218,7 +217,7 @@ static void hash_object(CSipHash *ctx, const SEXP x) {
   switch (TYPEOF(x)) {
   case STRSXP:
     if (XLENGTH(x) == 1 && ATTRIB(x) == R_NilValue) {
-      const char *s = CHAR(STRING_ELT(x, 0));
+      const char *s = SB_STRING(x);
       c_siphash_append(ctx, (uint8_t *) s, strlen(s));
       return;
     }
@@ -253,7 +252,8 @@ static void hash_object(CSipHash *ctx, const SEXP x) {
 static SEXP secretbase_siphash_impl(const SEXP x, const SEXP key, const SEXP convert,
                                     void (*const hash_func)(CSipHash *, SEXP)) {
   
-  const int conv = LOGICAL(convert)[0];
+  SB_ASSERT_LOGICAL(convert);
+  const int conv = SB_LOGICAL(convert);
   uint64_t hash;
   
   CSipHash ctx;
@@ -266,7 +266,7 @@ static SEXP secretbase_siphash_impl(const SEXP x, const SEXP key, const SEXP con
     size_t klen;
     switch (TYPEOF(key)) {
     case STRSXP:
-      data = (unsigned char *) (XLENGTH(key) ? CHAR(STRING_ELT(key, 0)) : "");
+      data = (unsigned char *) (XLENGTH(key) ? SB_STRING(key) : "");
       klen = strlen((char *) data);
       break;
     case RAWSXP:
@@ -282,7 +282,7 @@ static SEXP secretbase_siphash_impl(const SEXP x, const SEXP key, const SEXP con
   hash_func(&ctx, x);
   hash = c_siphash_finalize(&ctx);
   
-  return hash_to_sexp((unsigned char *) &hash, SB_SIPH_SIZE, conv);
+  return sb_hash_sexp((unsigned char *) &hash, SB_SIPH_SIZE, conv);
   
 }
 
