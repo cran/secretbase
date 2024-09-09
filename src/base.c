@@ -297,7 +297,7 @@ static void sb_serialize(nano_buf *buf, const SEXP object) {
     &output_stream,
     (R_pstream_data_t) buf,
     R_pstream_xdr_format,
-    SB_SERIAL_VER,
+    SB_R_SERIAL_VER,
     NULL,
     sb_write_bytes,
     NULL,
@@ -337,14 +337,14 @@ static nano_buf sb_any_buf(const SEXP x) {
   
   switch (TYPEOF(x)) {
   case STRSXP:
-    if (XLENGTH(x) == 1 && ATTRIB(x) == R_NilValue) {
+    if (XLENGTH(x) == 1 && !ANY_ATTRIB(x)) {
       const char *s = SB_STRING(x);
       NANO_INIT(&buf, (unsigned char *) s, strlen(s));
       goto resume;
     }
     break;
   case RAWSXP:
-    if (ATTRIB(x) == R_NilValue) {
+    if (!ANY_ATTRIB(x)) {
       NANO_INIT(&buf, (unsigned char *) DATAPTR_RO(x), XLENGTH(x));
       goto resume;
     }
