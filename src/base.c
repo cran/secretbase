@@ -245,7 +245,7 @@ static SEXP rawToChar(const unsigned char *buf, const size_t sz) {
   int i, j;
   for (i = 0, j = -1; i < sz; i++) if (buf[i]) j = i; else break;
   if (sz - i > 1) {
-    REprintf("data could not be converted to a character string\n");
+    Rf_warningcall_immediate(R_NilValue, "data could not be converted to a character string");
     out = Rf_allocVector(RAWSXP, sz);
     memcpy(SB_DATAPTR(out), buf, sz);
     return out;
@@ -340,19 +340,19 @@ static nano_buf sb_any_buf(const SEXP x) {
     if (XLENGTH(x) == 1 && !ANY_ATTRIB(x)) {
       const char *s = SB_STRING(x);
       NANO_INIT(&buf, (unsigned char *) s, strlen(s));
-      goto resume;
+      break;
     }
-    break;
+  if (0) {
   case RAWSXP:
     if (!ANY_ATTRIB(x)) {
       NANO_INIT(&buf, (unsigned char *) DATAPTR_RO(x), XLENGTH(x));
-      goto resume;
+      break;
     }
   }
+  default:
+    sb_serialize(&buf, x);
+  }
   
-  sb_serialize(&buf, x);
-  
-  resume:
   return buf;
   
 }
@@ -397,9 +397,10 @@ SEXP secretbase_base64dec(SEXP x, SEXP convert) {
   size_t inlen, olen;
   
   switch (TYPEOF(x)) {
-  case STRSXP:
-    inbuf = (unsigned char *) SB_STRING(x);
-    inlen = XLENGTH(*((const SEXP *) DATAPTR_RO(x)));
+  case STRSXP: ;
+    const char *str = SB_STRING(x);
+    inbuf = (unsigned char *) str;
+    inlen = strlen(str);
     break;
   case RAWSXP:
     inbuf = RAW(x);
