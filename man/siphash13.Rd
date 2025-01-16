@@ -8,38 +8,38 @@ siphash13(x, key = NULL, convert = TRUE, file)
 }
 \arguments{
 \item{x}{object to hash. A character string or raw vector (without
-attributes) is hashed \sQuote{as is}. All other objects are stream hashed
-using R serialization (but without allocation of the serialized object).}
+attributes) is hashed as is. All other objects are stream hashed using
+native R serialization.}
 
-\item{key}{[default NULL] a character string or raw vector comprising the 16
-byte (128 bit) key data, or else NULL which is equivalent to '0'. If a
-longer vector is supplied, only the first 16 bytes are used, and if
-shorter, padded with trailing '0'. Note: for character vectors, only the
-first element is used.}
+\item{key}{a character string or raw vector comprising the 16 byte (128 bit)
+key data, or else \code{NULL} which is equivalent to '0'. If a longer vector is
+supplied, only the first 16 bytes are used, and if shorter, padded with
+trailing '0'. Note: for character vectors, only the first element is used.}
 
-\item{convert}{[default TRUE] if TRUE, the hash is converted to its hex
-representation as a character string, if FALSE, output directly as a raw
-vector, or if NA, a vector of (32-bit) integer values.}
+\item{convert}{logical \code{TRUE} to convert the hash to its hex representation
+as a character string, \code{FALSE} to return directly as a raw vector, or \code{NA}
+to return as a vector of (32-bit) integers.}
 
-\item{file}{character file name / path. If specified, \sQuote{x} is ignored.
-The file is stream hashed, thus capable of handling files larger than
-memory.}
+\item{file}{character file name / path. If specified, \code{x} is ignored. The
+file is stream hashed, and the file can be larger than memory.}
 }
 \value{
-A character string, raw or integer vector depending on
-    \sQuote{convert}.
+A character string, raw or integer vector depending on \code{convert}.
 }
 \description{
 Returns a fast, cryptographically-strong SipHash keyed hash of the supplied
-    object or file. SipHash-1-3 is optimised for performance. Note: SipHash
-    is not a cryptographic hash algorithm.
+object or file. SipHash-1-3 is optimised for performance. Note: SipHash is
+not a cryptographic hash algorithm.
 }
 \section{R Serialization Stream Hashing}{
 
-    
-    Where this is used, serialization is always version 3 big-endian
-    represenation and the headers (containing R version and native encoding
-    information) are skipped to ensure portability across platforms.
+
+Where this is used, serialization is always version 3 big-endian
+representation and the headers (containing R version and native encoding
+information) are skipped to ensure portability across platforms.
+
+As hashing is performed in a streaming fashion, there is no materialization
+of, or memory allocation for, the serialized object.
 }
 
 \examples{
@@ -62,15 +62,15 @@ unlink(file)
 
 }
 \references{
-The SipHash family of cryptographically-strong pseudorandom
-    functions (PRFs) are described in 'SipHash: a fast short-input PRF',
-    Jean-Philippe Aumasson and Daniel J. Bernstein, Paper 2012/351, 2012,
-    Cryptology ePrint Archive at \url{https://ia.cr/2012/351}.
-    
-    This implementation is based on the SipHash streaming implementation by
-    Daniele Nicolodi, David Rheinsberg and Tom Gundersen at
-    \url{https://github.com/c-util/c-siphash}. This is in turn based on the
-    SipHash reference implementation by Jean-Philippe Aumasson and Daniel J.
-    Bernstein released to the public domain at
-    \url{https://github.com/veorq/SipHash}.
+The SipHash family of cryptographically-strong pseudorandom functions (PRFs)
+are described in 'SipHash: a fast short-input PRF', Jean-Philippe Aumasson
+and Daniel J. Bernstein, Paper 2012/351, 2012, Cryptology ePrint Archive at
+\url{https://ia.cr/2012/351}.
+
+This implementation is based on the SipHash streaming implementation by
+Daniele Nicolodi, David Rheinsberg and Tom Gundersen at
+\url{https://github.com/c-util/c-siphash}. This is in turn based on the
+SipHash reference implementation by Jean-Philippe Aumasson and Daniel J.
+Bernstein released to the public domain at
+\url{https://github.com/veorq/SipHash}.
 }

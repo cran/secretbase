@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Hibiki AI Limited <info@hibiki-ai.com>
+// Copyright (C) 2024-2025 Hibiki AI Limited <info@hibiki-ai.com>
 //
 // This file is part of secretbase.
 //
@@ -184,15 +184,16 @@ static inline uint64_t c_siphash_finalize(CSipHash *state) {
 
 static inline void hash_bytes(R_outpstream_t stream, void *src, int len) {
   
-  secretbase_siphash_context *sctx = (secretbase_siphash_context *) stream->data;
-  sctx->skip ? (void) sctx->skip-- : c_siphash_append(sctx->ctx, (uint8_t *) src, (size_t) len);
+  secretbase_context *sctx = (secretbase_context *) stream->data;
+  sctx->skip ? (void) sctx->skip-- :
+    c_siphash_append((CSipHash *) sctx->ctx, (uint8_t *) src, (size_t) len);
   
 }
 
 static void hash_file(CSipHash *ctx, const SEXP x) {
   
   SB_ASSERT_STR(x);
-  const char *file = R_ExpandFileName(SB_STRING(x));
+  const char *file = R_ExpandFileName(CHAR(*STRING_PTR_RO(x)));
   unsigned char buf[SB_BUF_SIZE];
   FILE *f;
   size_t cur;
@@ -217,7 +218,7 @@ static void hash_object(CSipHash *ctx, const SEXP x) {
   switch (TYPEOF(x)) {
   case STRSXP:
     if (XLENGTH(x) == 1 && !ANY_ATTRIB(x)) {
-      const char *s = SB_STRING(x);
+      const char *s = CHAR(*STRING_PTR_RO(x));
       c_siphash_append(ctx, (uint8_t *) s, strlen(s));
       return;
     }
@@ -230,7 +231,7 @@ static void hash_object(CSipHash *ctx, const SEXP x) {
     break;
   }
   
-  secretbase_siphash_context sctx;
+  secretbase_context sctx;
   sctx.skip = SB_SERIAL_HEADERS;
   sctx.ctx = ctx;
   
@@ -266,7 +267,7 @@ static SEXP secretbase_siphash_impl(const SEXP x, const SEXP key, const SEXP con
     size_t klen;
     switch (TYPEOF(key)) {
     case STRSXP:
-      data = (unsigned char *) (XLENGTH(key) ? SB_STRING(key) : "");
+      data = (unsigned char *) (XLENGTH(key) ? CHAR(*STRING_PTR_RO(key)) : "");
       klen = strlen((char *) data);
       break;
     case RAWSXP:

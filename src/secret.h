@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Hibiki AI Limited <info@hibiki-ai.com>
+// Copyright (C) 2024-2025 Hibiki AI Limited <info@hibiki-ai.com>
 //
 // This file is part of secretbase.
 //
@@ -69,20 +69,10 @@ typedef struct CSipHash {
   size_t n_bytes;
 } CSipHash;
 
-typedef struct secretbase_sha3_context {
+typedef struct secretbase_context {
   int skip;
-  mbedtls_sha3_context *ctx;
-} secretbase_sha3_context;
-
-typedef struct secretbase_sha256_context {
-  int skip;
-  mbedtls_sha256_context *ctx;
-} secretbase_sha256_context;
-
-typedef struct secretbase_siphash_context {
-  int skip;
-  CSipHash *ctx;
-} secretbase_siphash_context;
+  void *ctx;
+} secretbase_context;
 
 typedef struct nano_buf_s {
   unsigned char *buf;
@@ -104,7 +94,6 @@ typedef struct nano_buf_s {
 #define ANY_ATTRIB(x) (ATTRIB(x) != R_NilValue)
 #endif
 #define SB_DATAPTR(x) (void *) DATAPTR_RO(x)
-#define SB_STRING(x) CHAR(*((const SEXP *) DATAPTR_RO(x)))
 #define SB_LOGICAL(x) *(int *) DATAPTR_RO(x)
 #define SB_ASSERT_LOGICAL(x) if (TYPEOF(x) != LGLSXP)          \
 Rf_error("'convert' must be a logical value")
@@ -119,10 +108,12 @@ Rf_error("'file' must be a character string")
 (x)->len = 0;                                                  \
 (x)->cur = sz
 #define NANO_FREE(x) if (x.len) R_Free(x.buf)
-#define CHECK_ERROR(x) if (x) { R_Free(buf);                   \
+#define CHECK_ERROR(x, y) if (x) { R_Free(y);                  \
 Rf_error("write buffer insufficient"); }
 #define ERROR_OUT(x) if (x->len) R_Free(x->buf);               \
 Rf_error("serialization exceeds max length of raw vector")
+#define ERROR_CONVERT(x) R_Free(x);                            \
+Rf_error("data could not be converted to a character string")
 #define ERROR_FOPEN(x) Rf_error("file not found or no read permission at '%s'", x)
 #define ERROR_FREAD(x) Rf_error("file read error at '%s'", x)
 

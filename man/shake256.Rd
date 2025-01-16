@@ -8,38 +8,39 @@ shake256(x, bits = 256L, convert = TRUE, file)
 }
 \arguments{
 \item{x}{object to hash. A character string or raw vector (without
-attributes) is hashed \sQuote{as is}. All other objects are stream hashed
-using R serialization (but without allocation of the serialized object).}
+attributes) is hashed as is. All other objects are stream hashed using
+native R serialization.}
 
-\item{bits}{[default 256L] output size of the returned hash. Must be between
-8 and 2^24 and coercible to integer.}
+\item{bits}{integer output size of the returned hash. Value must be between 8
+and 2^24.}
 
-\item{convert}{[default TRUE] if TRUE, the hash is converted to its hex
-representation as a character string, if FALSE, output directly as a raw
-vector, or if NA, a vector of (32-bit) integer values.}
+\item{convert}{logical \code{TRUE} to convert the hash to its hex representation
+as a character string, \code{FALSE} to return directly as a raw vector, or \code{NA}
+to return as a vector of (32-bit) integers.}
 
-\item{file}{character file name / path. If specified, \sQuote{x} is ignored.
-The file is stream hashed, thus capable of handling files larger than
-memory.}
+\item{file}{character file name / path. If specified, \code{x} is ignored. The
+file is stream hashed, and the file can be larger than memory.}
 }
 \value{
-A character string, raw or integer vector depending on
-    \sQuote{convert}.
+A character string, raw or integer vector depending on \code{convert}.
 }
 \description{
 Returns a SHAKE256 hash of the supplied object or file.
 }
 \details{
-To produce single integer values suitable for use as random seeds
-    for R's pseudo random number generators (RNGs), set \sQuote{bits} to 32
-    and \sQuote{convert} to NA.
+To produce single integer values suitable for use as random seeds for R's
+pseudo random number generators (RNGs), set \sQuote{bits} to 32 and
+\sQuote{convert} to NA.
 }
 \section{R Serialization Stream Hashing}{
 
-    
-    Where this is used, serialization is always version 3 big-endian
-    represenation and the headers (containing R version and native encoding
-    information) are skipped to ensure portability across platforms.
+
+Where this is used, serialization is always version 3 big-endian
+representation and the headers (containing R version and native encoding
+information) are skipped to ensure portability across platforms.
+
+As hashing is performed in a streaming fashion, there is no materialization
+of, or memory allocation for, the serialized object.
 }
 
 \examples{
@@ -59,7 +60,7 @@ unlink(file)
 
 }
 \references{
-This implementation is based on one by 'The Mbed TLS
-    Contributors' under the 'Mbed TLS' Trusted Firmware Project at
-    \url{https://www.trustedfirmware.org/projects/mbed-tls}.
+This implementation is based on one by 'The Mbed TLS Contributors' under the
+'Mbed TLS' Trusted Firmware Project at
+\url{https://www.trustedfirmware.org/projects/mbed-tls}.
 }

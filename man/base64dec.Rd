@@ -9,22 +9,21 @@ base64dec(x, convert = TRUE)
 \arguments{
 \item{x}{an object.}
 
-\item{convert}{[default TRUE] logical TRUE to convert back to a character
-string, FALSE to convert back to a raw vector or NA to decode and then
-unserialize back to the original object.}
+\item{convert}{logical \code{TRUE} to convert back to a character string, \code{FALSE}
+to convert back to a raw vector or \code{NA} to decode and then unserialize back
+to the original object.}
 }
 \value{
 A character string, raw vector, or other object depending on the
-    value of \sQuote{convert}. If conversion to a character string fails,
-    a raw vector will be returned instead (accompanied by a warning).
+value of \code{convert}.
 }
 \description{
 Decodes a character string, raw vector or other object from base64 encoding.
 }
 \details{
-The value of \sQuote{convert} should be set to TRUE, FALSE or NA to
-    be the reverse of the 3 encoding operations (for strings, raw vectors and
-    arbitrary objects), in order to return the original object.
+The value of \code{convert} should be set to \code{TRUE}, \code{FALSE} or \code{NA} to be the
+reverse of the 3 encoding operations (for strings, raw vectors and arbitrary
+objects), in order to return the original object.
 }
 \examples{
 base64dec(base64enc("secret base"))
@@ -33,10 +32,10 @@ base64dec(base64enc(data.frame()), convert = NA)
 
 }
 \references{
-This implementation is based that by 'The Mbed TLS Contributors'
-    under the 'Mbed TLS' Trusted Firmware Project at
-    \url{https://www.trustedfirmware.org/projects/mbed-tls}.
+This implementation is based that by 'The Mbed TLS Contributors' under the
+'Mbed TLS' Trusted Firmware Project at
+\url{https://www.trustedfirmware.org/projects/mbed-tls}.
 }
 \seealso{
-\code{\link{base64enc}}
+\code{\link[=base64enc]{base64enc()}}
 }

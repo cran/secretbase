@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Hibiki AI Limited <info@hibiki-ai.com>
+// Copyright (C) 2024-2025 Hibiki AI Limited <info@hibiki-ai.com>
 //
 // This file is part of secretbase.
 //
@@ -93,9 +93,7 @@ int mbedtls_base64_encode(unsigned char *dst, size_t dlen, size_t *olen,
   
   n = slen / 3 + (slen % 3 != 0);
   
-  if (n > (SIZE_MAX - 1) / 4) {
-    *olen = SIZE_MAX; return MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL;
-  }
+  if (n > (SIZE_MAX - 1) / 4) { *olen = SIZE_MAX; return MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL; }
   
   n *= 4;
   
@@ -244,12 +242,7 @@ static SEXP rawToChar(const unsigned char *buf, const size_t sz) {
   SEXP out;
   int i, j;
   for (i = 0, j = -1; i < sz; i++) if (buf[i]) j = i; else break;
-  if (sz - i > 1) {
-    Rf_warningcall_immediate(R_NilValue, "data could not be converted to a character string");
-    out = Rf_allocVector(RAWSXP, sz);
-    memcpy(SB_DATAPTR(out), buf, sz);
-    return out;
-  }
+  if (sz - i > 1) { ERROR_CONVERT(buf); }
   
   PROTECT(out = Rf_allocVector(STRSXP, 1));
   SET_STRING_ELT(out, 0, Rf_mkCharLenCE((const char *) buf, j + 1, CE_NATIVE));
@@ -338,7 +331,7 @@ static nano_buf sb_any_buf(const SEXP x) {
   switch (TYPEOF(x)) {
   case STRSXP:
     if (XLENGTH(x) == 1 && !ANY_ATTRIB(x)) {
-      const char *s = SB_STRING(x);
+      const char *s = CHAR(*STRING_PTR_RO(x));
       NANO_INIT(&buf, (unsigned char *) s, strlen(s));
       break;
     }
@@ -372,7 +365,7 @@ SEXP secretbase_base64enc(SEXP x, SEXP convert) {
   unsigned char *buf = R_Calloc(olen, unsigned char);
   xc = mbedtls_base64_encode(buf, olen, &olen, hash.buf, hash.cur);
   NANO_FREE(hash);
-  CHECK_ERROR(xc);
+  CHECK_ERROR(xc, buf);
   
   if (conv) {
     out = rawToChar(buf, olen);
@@ -398,7 +391,7 @@ SEXP secretbase_base64dec(SEXP x, SEXP convert) {
   
   switch (TYPEOF(x)) {
   case STRSXP: ;
-    const char *str = SB_STRING(x);
+    const char *str = CHAR(*STRING_PTR_RO(x));
     inbuf = (unsigned char *) str;
     inlen = strlen(str);
     break;
@@ -415,7 +408,7 @@ SEXP secretbase_base64dec(SEXP x, SEXP convert) {
     Rf_error("input is not valid base64");
   unsigned char *buf = R_Calloc(olen, unsigned char);
   xc = mbedtls_base64_decode(buf, olen, &olen, inbuf, inlen);
-  CHECK_ERROR(xc);
+  CHECK_ERROR(xc, buf);
   
   switch (conv) {
   case 0:

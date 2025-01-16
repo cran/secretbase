@@ -25,8 +25,8 @@ badge](https://shikokuchuo.r-universe.dev/badges/secretbase?color=ff803d)](https
 Fast and memory-efficient streaming hash functions and base64 encoding /
 decoding.
 
-Hashes strings and raw vectors directly. Stream hashes files potentially
-larger than memory, as well as in-memory objects through R’s
+Hashes strings and raw vectors directly. Stream hashes files which can
+be larger than memory, as well as in-memory objects through R’s
 serialization mechanism.
 
 Implementations include the SHA-256, SHA-3 and ‘Keccak’ cryptographic
@@ -54,13 +54,11 @@ sha3("秘密の基地の中", bits = 512L)
 #> [1] "e30cdc73f6575c40d55b5edc8eb4f97940f5ca491640b41612e02a05f3e59dd9c6c33f601d8d7a8e2ca0504b8c22f7bc69fa8f10d7c01aab392781ff4ae1e610"
 ```
 
-#### Hash strings and raw vectors
-
-Character strings and raw vectors are hashed directly (as above).
-
 #### Stream hash R objects
 
-All other objects are stream hashed using R serialization
+Character strings and raw vectors are hashed directly.
+
+All other objects are stream hashed using R serialization.
 
 - memory-efficient as performed without allocation of the serialized
   object
@@ -126,11 +124,11 @@ sha256("secret base", key = "秘密の基地の中")
 
 #### SipHash
 
-SipHash-1-3 is optimized for performance. <br /> Pass to `key` a
-character string or raw vector of up to 16 bytes (128 bits):
+SipHash-1-3 is optimized for performance. Pass to `key` a character
+string or raw vector of up to 16 bytes (128 bits):
 
 ``` r
-siphash13("secret base", key = charToRaw("秘密の基地の中"))
+siphash13("secret base", key = "秘密の基地の中")
 #> [1] "a1f0a751892cc7dd"
 ```
 
@@ -158,14 +156,14 @@ Serialized objects:
 
 ``` r
 base64enc(data.frame())
-#> [1] "WAoAAAADAAQEAQADBQAAAAAFVVRGLTgAAAMTAAAAAAAABAIAAAABAAQACQAAAAVuYW1lcwAAABAAAAAAAAAEAgAAAAEABAAJAAAACXJvdy5uYW1lcwAAAA0AAAAAAAAEAgAAAAEABAAJAAAABWNsYXNzAAAAEAAAAAEABAAJAAAACmRhdGEuZnJhbWUAAAD+"
+#> [1] "WAoAAAADAAQEAgADBQAAAAAFVVRGLTgAAAMTAAAAAAAABAIAAAABAAQACQAAAAVuYW1lcwAAABAAAAAAAAAEAgAAAAEABAAJAAAACXJvdy5uYW1lcwAAAA0AAAAAAAAEAgAAAAEABAAJAAAABWNsYXNzAAAAEAAAAAEABAAJAAAACmRhdGEuZnJhbWUAAAD+"
 base64dec(base64enc(data.frame()), convert = NA)
 #> data frame with 0 columns and 0 rows
 ```
 
 ### Installation
 
-Install the latest release from CRAN or R-multiverse:
+Install the latest release from CRAN:
 
 ``` r
 install.packages("secretbase")
