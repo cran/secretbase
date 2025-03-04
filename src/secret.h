@@ -1,19 +1,3 @@
-// Copyright (C) 2024-2025 Hibiki AI Limited <info@hibiki-ai.com>
-//
-// This file is part of secretbase.
-//
-// secretbase is free software: you can redistribute it and/or modify it under
-// the terms of the GNU General Public License as published by the Free Software
-// Foundation, either version 3 of the License, or (at your option) any later
-// version.
-//
-// secretbase is distributed in the hope that it will be useful, but WITHOUT ANY
-// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-// A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License along with
-// secretbase. If not, see <https://www.gnu.org/licenses/>.
-
 // secretbase - header file ----------------------------------------------------
 
 #ifndef SECRETBASE_H
@@ -112,8 +96,6 @@ Rf_error("'file' must be a character string")
 Rf_error("write buffer insufficient"); }
 #define ERROR_OUT(x) if (x->len) R_Free(x->buf);               \
 Rf_error("serialization exceeds max length of raw vector")
-#define ERROR_CONVERT(x) R_Free(x);                            \
-Rf_error("data could not be converted to a character string")
 #define ERROR_FOPEN(x) Rf_error("file not found or no read permission at '%s'", x)
 #define ERROR_FREAD(x) Rf_error("file read error at '%s'", x)
 

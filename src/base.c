@@ -1,19 +1,3 @@
-// Copyright (C) 2024-2025 Hibiki AI Limited <info@hibiki-ai.com>
-//
-// This file is part of secretbase.
-//
-// secretbase is free software: you can redistribute it and/or modify it under
-// the terms of the GNU General Public License as published by the Free Software
-// Foundation, either version 3 of the License, or (at your option) any later
-// version.
-//
-// secretbase is distributed in the hope that it will be useful, but WITHOUT ANY
-// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-// A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License along with
-// secretbase. If not, see <https://www.gnu.org/licenses/>.
-
 // secretbase ------------------------------------------------------------------
 
 #include "secret.h"
@@ -237,15 +221,18 @@ int mbedtls_base64_decode(unsigned char *dst, size_t dlen, size_t *olen,
 
 // secretbase - internals ------------------------------------------------------
 
-static SEXP rawToChar(const unsigned char *buf, const size_t sz) {
+static SEXP sb_raw_char(const unsigned char *buf, const size_t sz) {
+
+  int i;
+  for (i = 0; i < sz; i++) if (!buf[i]) break;
+  if (sz - i > 1) {
+    R_Free(buf);
+    Rf_error("data could not be converted to a character string");
+  }
   
   SEXP out;
-  int i, j;
-  for (i = 0, j = -1; i < sz; i++) if (buf[i]) j = i; else break;
-  if (sz - i > 1) { ERROR_CONVERT(buf); }
-  
   PROTECT(out = Rf_allocVector(STRSXP, 1));
-  SET_STRING_ELT(out, 0, Rf_mkCharLenCE((const char *) buf, j + 1, CE_NATIVE));
+  SET_STRING_ELT(out, 0, Rf_mkCharLenCE((const char *) buf, i, CE_NATIVE));
   
   UNPROTECT(1);
   return out;
@@ -368,7 +355,7 @@ SEXP secretbase_base64enc(SEXP x, SEXP convert) {
   CHECK_ERROR(xc, buf);
   
   if (conv) {
-    out = rawToChar(buf, olen);
+    out = sb_raw_char(buf, olen);
   } else {
     out = Rf_allocVector(RAWSXP, olen);
     memcpy(SB_DATAPTR(out), buf, olen);
@@ -416,7 +403,7 @@ SEXP secretbase_base64dec(SEXP x, SEXP convert) {
     memcpy(SB_DATAPTR(out), buf, olen);
     break;
   case 1:
-    out = rawToChar(buf, olen);
+    out = sb_raw_char(buf, olen);
     break;
   default:
     out = sb_unserialize(buf, olen);

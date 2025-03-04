@@ -1,3 +1,7 @@
+# secretbase 1.0.5
+
+* Package is re-licensed under the MIT licence.
+
 # secretbase 1.0.4
 
 * `base64dec()` now errors if `convert = TRUE` and conversion to a character string fails, no longer returning a raw vector (accompanied by a warning).
