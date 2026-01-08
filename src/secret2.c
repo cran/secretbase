@@ -16,113 +16,6 @@
  *  http://csrc.nist.gov/publications/fips/fips180-2/fips180-2.pdf
  */
 
-#if defined(__GNUC__)
-__attribute__((always_inline))
-#endif
-static inline uint32_t mbedtls_get_unaligned_uint32(const void *p) {
-  uint32_t r;
-  memcpy(&r, p, sizeof(r));
-  return r;
-}
-
-#if defined(__GNUC__)
-__attribute__((always_inline))
-#endif
-static inline void mbedtls_put_unaligned_uint32(void *p, uint32_t x) {
-  memcpy(p, &x, sizeof(x));
-}
-
-#if defined(__GNUC__) && defined(__GNUC_PREREQ)
-#if __GNUC_PREREQ(4, 8)
-#define MBEDTLS_BSWAP16 __builtin_bswap16
-#endif /* __GNUC_PREREQ(4,8) */
-#if __GNUC_PREREQ(4, 3)
-#define MBEDTLS_BSWAP32 __builtin_bswap32
-#define MBEDTLS_BSWAP64 __builtin_bswap64
-#endif /* __GNUC_PREREQ(4,3) */
-#endif /* defined(__GNUC__) && defined(__GNUC_PREREQ) */
-
-#if defined(__clang__) && defined(__has_builtin)
-#if __has_builtin(__builtin_bswap16) && !defined(MBEDTLS_BSWAP16)
-#define MBEDTLS_BSWAP16 __builtin_bswap16
-#endif /* __has_builtin(__builtin_bswap16) */
-#if __has_builtin(__builtin_bswap32) && !defined(MBEDTLS_BSWAP32)
-#define MBEDTLS_BSWAP32 __builtin_bswap32
-#endif /* __has_builtin(__builtin_bswap32) */
-#if __has_builtin(__builtin_bswap64) && !defined(MBEDTLS_BSWAP64)
-#define MBEDTLS_BSWAP64 __builtin_bswap64
-#endif /* __has_builtin(__builtin_bswap64) */
-#endif /* defined(__clang__) && defined(__has_builtin) */
-
-#if defined(__ARMCC_VERSION) && (__ARMCC_VERSION >= 410000) && !defined(MBEDTLS_BSWAP32)
-#if defined(__ARM_ACLE)
-#include <arm_acle.h>
-#endif
-#define MBEDTLS_BSWAP32 __rev
-#endif
-
-#if defined(__IAR_SYSTEMS_ICC__)
-#if defined(__ARM_ACLE)
-#include <arm_acle.h>
-#define MBEDTLS_BSWAP16(x) ((uint16_t) __rev16((uint32_t) (x)))
-#define MBEDTLS_BSWAP32 __rev
-#define MBEDTLS_BSWAP64 __revll
-#endif
-#endif
-
-#if !defined(MBEDTLS_BSWAP16)
-static inline uint16_t mbedtls_bswap16(uint16_t x) {
-  return
-  (x & 0x00ff) << 8 |
-    (x & 0xff00) >> 8;
-}
-#define MBEDTLS_BSWAP16 mbedtls_bswap16
-#endif /* !defined(MBEDTLS_BSWAP16) */
-
-#if !defined(MBEDTLS_BSWAP32)
-static inline uint32_t mbedtls_bswap32(uint32_t x) {
-  return
-  (x & 0x000000ff) << 24 |
-    (x & 0x0000ff00) <<  8 |
-    (x & 0x00ff0000) >>  8 |
-    (x & 0xff000000) >> 24;
-}
-#define MBEDTLS_BSWAP32 mbedtls_bswap32
-#endif /* !defined(MBEDTLS_BSWAP32) */
-
-#if !defined(MBEDTLS_BSWAP64)
-static inline uint64_t mbedtls_bswap64(uint64_t x) {
-  return
-  (x & 0x00000000000000ffULL) << 56 |
-    (x & 0x000000000000ff00ULL) << 40 |
-    (x & 0x0000000000ff0000ULL) << 24 |
-    (x & 0x00000000ff000000ULL) <<  8 |
-    (x & 0x000000ff00000000ULL) >>  8 |
-    (x & 0x0000ff0000000000ULL) >> 24 |
-    (x & 0x00ff000000000000ULL) >> 40 |
-    (x & 0xff00000000000000ULL) >> 56;
-}
-#define MBEDTLS_BSWAP64 mbedtls_bswap64
-#endif /* !defined(MBEDTLS_BSWAP64) */
-
-#define MBEDTLS_GET_UINT32_BE(data, offset)                                \
-((MBEDTLS_IS_BIG_ENDIAN)                                                   \
-   ? mbedtls_get_unaligned_uint32((data) + (offset))                       \
-   : MBEDTLS_BSWAP32(mbedtls_get_unaligned_uint32((data) + (offset)))      \
-)
-
-#define MBEDTLS_PUT_UINT32_BE(n, data, offset)                                        \
-{                                                                                     \
-  if (MBEDTLS_IS_BIG_ENDIAN)                                                          \
-  {                                                                                   \
-    mbedtls_put_unaligned_uint32((data) + (offset), (uint32_t) (n));                  \
-  }                                                                                   \
-  else                                                                                \
-  {                                                                                   \
-    mbedtls_put_unaligned_uint32((data) + (offset), MBEDTLS_BSWAP32((uint32_t) (n))); \
-  }                                                                                   \
-}                                                                                     \
-
 static inline void mbedtls_xor(unsigned char *r,
                                const unsigned char *a,
                                const unsigned char *b,
@@ -396,14 +289,14 @@ static void hash_object(mbedtls_sha256_context *ctx, const SEXP x) {
   
   switch (TYPEOF(x)) {
   case STRSXP:
-    if (XLENGTH(x) == 1 && !ANY_ATTRIB(x)) {
+    if (XLENGTH(x) == 1 && NO_ATTRIB(x)) {
       const char *s = CHAR(*STRING_PTR_RO(x));
       mbedtls_sha256_update(ctx, (uint8_t *) s, strlen(s));
       return;
     }
     break;
   case RAWSXP:
-    if (!ANY_ATTRIB(x)) {
+    if (NO_ATTRIB(x)) {
       mbedtls_sha256_update(ctx, (uint8_t *) DATAPTR_RO(x), (size_t) XLENGTH(x));
       return;
     }
@@ -497,6 +390,18 @@ static SEXP secretbase_sha256_impl(const SEXP x, const SEXP key, const SEXP conv
   
   return sb_hash_sexp(buf, SB_SHA256_SIZE, conv);
   
+}
+
+// secretbase - shared helper functions ----------------------------------------
+
+void sb_sha256_raw(const void *data, size_t len, void *digest) {
+
+  mbedtls_sha256_context ctx;
+  mbedtls_sha256_init(&ctx);
+  mbedtls_sha256_starts(&ctx);
+  mbedtls_sha256_update(&ctx, data, len);
+  mbedtls_sha256_finish(&ctx, digest);
+
 }
 
 // secretbase - exported functions ---------------------------------------------

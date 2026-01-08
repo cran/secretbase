@@ -1,33 +1,35 @@
-Package: secretbase
 Type: Package
-Title: Cryptographic Hash, Extendable-Output and Base64 Functions
-Version: 1.0.5
-Description: Fast and memory-efficient streaming hash functions and base64
-    encoding / decoding. Hashes strings and raw vectors directly. Stream hashes
-    files which can be larger than memory, as well as in-memory objects through
-    R's serialization mechanism. Implementations include the SHA-256, SHA-3 and
-    'Keccak' cryptographic hash functions, SHAKE256 extendable-output function
-    (XOF), and 'SipHash' pseudo-random function.
-Authors@R: 
-    c(person(given = "Charlie",
-             family = "Gao",
-             role = c("aut", "cre"),
-             email = "charlie.gao@shikokuchuo.net",
-             comment = c(ORCID = "0000-0002-0750-061X")),
-      person(given = "Hibiki AI Limited",
-             role = "cph"))
+Package: secretbase
+Title: Cryptographic Hash, Extendable-Output and Binary Encoding
+        Functions
+Version: 1.1.0
+Authors@R: c(
+    person("Charlie", "Gao", , "charlie.gao@posit.co", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-0750-061X")),
+    person("Posit Software, PBC", role = c("cph", "fnd"),
+           comment = c(ROR = "03wc8by49")),
+    person("Hibiki AI Limited", role = "cph")
+  )
+Description: Fast and memory-efficient streaming hash functions, binary
+    encoding and serialization. Hashes strings and raw vectors directly.
+    Stream hashes files which can be larger than memory, as well as
+    in-memory objects through R's serialization mechanism. Implements the
+    SHA-256, SHA-3 and 'Keccak' cryptographic hash functions, SHAKE256
+    extendable-output function (XOF), 'SipHash' pseudo-random function,
+    base64 and base58 encoding, and 'CBOR' serialization.
 License: MIT + file LICENSE
-BugReports: https://github.com/shikokuchuo/secretbase/issues
 URL: https://shikokuchuo.net/secretbase/,
         https://github.com/shikokuchuo/secretbase/
-Encoding: UTF-8
+BugReports: https://github.com/shikokuchuo/secretbase/issues
 Depends: R (>= 3.5)
-RoxygenNote: 7.3.2
 Config/build/compilation-database: true
+Encoding: UTF-8
+RoxygenNote: 7.3.3
 NeedsCompilation: yes
-Packaged: 2025-03-04 14:17:54 UTC; cg334
-Author: Charlie Gao [aut, cre] (<https://orcid.org/0000-0002-0750-061X>),
+Packaged: 2026-01-07 21:39:11 UTC; cg334
+Author: Charlie Gao [aut, cre] (ORCID: <https://orcid.org/0000-0002-0750-061X>),
+  Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>),
   Hibiki AI Limited [cph]
-Maintainer: Charlie Gao <charlie.gao@shikokuchuo.net>
+Maintainer: Charlie Gao <charlie.gao@posit.co>
 Repository: CRAN
-Date/Publication: 2025-03-04 14:50:02 UTC
+Date/Publication: 2026-01-08 11:50:11 UTC
