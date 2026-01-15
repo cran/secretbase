@@ -2,7 +2,7 @@ Type: Package
 Package: secretbase
 Title: Cryptographic Hash, Extendable-Output and Binary Encoding
         Functions
-Version: 1.1.0
+Version: 1.1.1
 Authors@R: c(
     person("Charlie", "Gao", , "charlie.gao@posit.co", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-0750-061X")),
@@ -26,10 +26,10 @@ Config/build/compilation-database: true
 Encoding: UTF-8
 RoxygenNote: 7.3.3
 NeedsCompilation: yes
-Packaged: 2026-01-07 21:39:11 UTC; cg334
+Packaged: 2026-01-15 11:14:02 UTC; cg334
 Author: Charlie Gao [aut, cre] (ORCID: <https://orcid.org/0000-0002-0750-061X>),
   Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>),
   Hibiki AI Limited [cph]
 Maintainer: Charlie Gao <charlie.gao@posit.co>
 Repository: CRAN
-Date/Publication: 2026-01-08 11:50:11 UTC
+Date/Publication: 2026-01-15 11:40:02 UTC
