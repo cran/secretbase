@@ -1,3 +1,7 @@
+# secretbase 1.2.1
+
+* Fixes UB as detected when compiling under GCC 16.
+
 # secretbase 1.2.0
 
 * Adds `jsonenc()` and `jsondec()` for a minimal JSON encoding/decoding implementation.

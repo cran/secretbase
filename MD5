@@ -1,7 +1,7 @@
-45d71bed46872abc85bf2099b6e37ab6 *DESCRIPTION
+b86b3ec96fe1c2134cbda960022efa4f *DESCRIPTION
 08a87659d90c537c8273a132a4240d75 *LICENSE
 115cca4a96250f2d4d354aa6024a17a0 *NAMESPACE
-807ed520ae9f60c0d4f8ac97046b5a03 *NEWS.md
+659301d8865b94fef5f43ecb04868c2e *NEWS.md
 ac2e05d646f466461d1be8c50d6dfca7 *R/base.R
 4ac585003a8bdb6504d3bd0b5671690d *R/secret.R
 e5e3cfabb17722251e71dd328cb13af2 *R/secretbase-package.R
@@ -23,12 +23,12 @@ b21bb9349b303ef7c9baed762311c521 *man/sha256.Rd
 cc5144b678fd88ea0bf75bffa6af3baa *man/siphash13.Rd
 d25d5af44b59cd40d3830b54f7a7cf7f *src/Makevars
 40a02086d1f1166c3561d0bb9bc21866 *src/base58.c
-5259d2ce1fc16c4f81b0efd918948d3b *src/base64.c
+93e72728a49440c301c8f30719312a4a *src/base64.c
 fb0f2a6b32ab4eed378a547274ff9db6 *src/cbor.c
 f7b842b6ce6db3c7c2aefdfaddc3727f *src/init.c
-e17dc029878c5f58ff08df730db97151 *src/json.c
+1fddfd47882f8cc16bf291408293c4cc *src/json.c
 13d83960ec050066f2e3fec656be9ceb *src/secret.h
 12ad92894a16d8eeb07a821d79480a3e *src/sha256.c
 211df70d7be063f15f7648220077d964 *src/sha3.c
 dcafc6c2a9c062dcafcc99fdbcddc8e3 *src/siphash.c
-eafc39fcbe7a7b72284f2e022de0cf68 *tests/tests.R
+5a1ad62b8bbc14ea3a40cb78c852db06 *tests/tests.R
